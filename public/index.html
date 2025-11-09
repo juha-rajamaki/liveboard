@@ -17,32 +17,66 @@
         </header>
 
         <main>
-            <div class="video-container">
-                <div id="player"></div>
-                <div class="placeholder" id="placeholder">
-                    <div class="placeholder-content">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="video-section">
+                <div class="video-container">
+                    <div id="player"></div>
+                    <div class="placeholder" id="placeholder">
+                        <div class="placeholder-content">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <p>Waiting for video URL...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-controls">
+                    <button id="pauseBtn" class="control-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                        Pause
+                    </button>
+                    <button id="playBtn" class="control-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
-                        <p>Waiting for video URL...</p>
-                    </div>
+                        Resume
+                    </button>
+                    <button id="stopBtn" class="control-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12"></rect>
+                        </svg>
+                        Stop
+                    </button>
                 </div>
             </div>
 
-            <div class="info-panel">
-                <h2>Current Video</h2>
-                <p id="currentUrl">No video loaded</p>
+            <div class="sidebar">
+                <div class="info-panel">
+                    <h2>Current Video</h2>
+                    <p id="currentUrl">No video loaded</p>
 
-                <h2>API Information</h2>
-                <div class="api-info">
-                    <p><strong>Endpoint:</strong> POST /api/play</p>
-                    <p><strong>Body:</strong> <code>{ "url": "youtube_url" }</code></p>
+                    <h2>API Information</h2>
+                    <div class="api-info">
+                        <p><strong>Endpoint:</strong> POST /api/play</p>
+                        <p><strong>Body:</strong> <code>{ "url": "youtube_url" }</code></p>
+                    </div>
+
+                    <h2>Test API</h2>
+                    <div class="test-form">
+                        <input type="text" id="testUrl" placeholder="Enter YouTube URL" />
+                        <button id="testButton">Send to API</button>
+                    </div>
                 </div>
 
-                <h2>Test API</h2>
-                <div class="test-form">
-                    <input type="text" id="testUrl" placeholder="Enter YouTube URL" />
-                    <button id="testButton">Send to API</button>
+                <div class="history-panel">
+                    <div class="history-header">
+                        <h2>History</h2>
+                        <button id="clearHistory" class="clear-btn">Clear</button>
+                    </div>
+                    <div id="historyList" class="history-list"></div>
                 </div>
             </div>
         </main>
