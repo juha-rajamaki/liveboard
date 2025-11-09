@@ -332,6 +332,59 @@ socket.on('play-video', (data) => {
     playVideo(data.url);
 });
 
+// Control event handlers from API
+socket.on('control-pause', () => {
+    console.log('Received pause command from API');
+    if (player && isPlayerReady) {
+        player.pauseVideo();
+    }
+});
+
+socket.on('control-resume', () => {
+    console.log('Received resume command from API');
+    if (player && isPlayerReady) {
+        player.playVideo();
+    }
+});
+
+socket.on('control-stop', () => {
+    console.log('Received stop command from API');
+    if (player && isPlayerReady) {
+        player.stopVideo();
+        placeholder.classList.remove('hidden');
+        currentUrlElement.textContent = 'No video loaded';
+    }
+});
+
+socket.on('control-fullscreen', () => {
+    console.log('Received fullscreen command from API');
+    if (!videoContainer) return;
+
+    if (!document.fullscreenElement) {
+        if (videoContainer.requestFullscreen) {
+            videoContainer.requestFullscreen();
+        } else if (videoContainer.webkitRequestFullscreen) {
+            videoContainer.webkitRequestFullscreen();
+        } else if (videoContainer.msRequestFullscreen) {
+            videoContainer.msRequestFullscreen();
+        }
+    }
+});
+
+socket.on('control-exitfullscreen', () => {
+    console.log('Received exit fullscreen command from API');
+
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+});
+
 // Test form handler
 testButton.addEventListener('click', async () => {
     const url = testUrl.value.trim();

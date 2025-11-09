@@ -176,6 +176,61 @@ app.post('/api/play', playLimiter, (req, res) => {
   });
 });
 
+// Pause video endpoint
+app.post('/api/pause', playLimiter, (req, res) => {
+  console.log('Pause command received');
+  io.emit('control-pause');
+  res.json({
+    success: true,
+    message: 'Pause command sent to all dashboards',
+    clients: connectedClients
+  });
+});
+
+// Resume/Play video endpoint
+app.post('/api/resume', playLimiter, (req, res) => {
+  console.log('Resume command received');
+  io.emit('control-resume');
+  res.json({
+    success: true,
+    message: 'Resume command sent to all dashboards',
+    clients: connectedClients
+  });
+});
+
+// Stop video endpoint
+app.post('/api/stop', playLimiter, (req, res) => {
+  console.log('Stop command received');
+  io.emit('control-stop');
+  res.json({
+    success: true,
+    message: 'Stop command sent to all dashboards',
+    clients: connectedClients
+  });
+});
+
+// Fullscreen endpoint
+app.post('/api/fullscreen', playLimiter, (req, res) => {
+  console.log('Fullscreen command received');
+  io.emit('control-fullscreen');
+  res.json({
+    success: true,
+    message: 'Fullscreen command sent to all dashboards',
+    clients: connectedClients
+  });
+});
+
+// Exit fullscreen endpoint
+app.post('/api/exitfullscreen', playLimiter, (req, res) => {
+  console.log('Exit fullscreen command received');
+  io.emit('control-exitfullscreen');
+  res.json({
+    success: true,
+    message: 'Exit fullscreen command sent to all dashboards',
+    clients: connectedClients
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
