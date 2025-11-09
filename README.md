@@ -27,12 +27,12 @@ npm start
 
 2. Open your browser and navigate to:
 ```
-http://localhost:3000
+http://localhost:666
 ```
 
 3. Send a YouTube URL to the API:
 ```bash
-curl -X POST http://localhost:3000/api/play \
+curl -X POST http://localhost:666/api/play \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 ```
