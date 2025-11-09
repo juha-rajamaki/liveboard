@@ -40,17 +40,31 @@ header h1 {
 }
 
 .doc-link {
-    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
     background: #667eea;
     color: white;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: 6px;
     font-size: 0.9em;
-    transition: background 0.3s;
+    font-weight: 500;
+    transition: all 0.3s;
 }
 
 .doc-link:hover {
     background: #5568d3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.doc-link:active {
+    transform: translateY(0);
+}
+
+.doc-link svg {
+    flex-shrink: 0;
 }
 
 .compact-toggle-btn {

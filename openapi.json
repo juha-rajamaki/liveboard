@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "YouTube Dashboard API",
+    "title": "Liveboard API",
     "description": "REST API for remote control of YouTube video playback on connected dashboard displays via WebSocket broadcasting.",
     "version": "1.0.0",
     "contact": {

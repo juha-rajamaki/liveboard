@@ -1,6 +1,6 @@
-# YouTube Dashboard API Documentation
+# Liveboard API Documentation
 
-Complete API reference for controlling the YouTube Dashboard remotely.
+Complete API reference for controlling the Liveboard remotely.
 
 ## Table of Contents
 - [Getting Started](#getting-started)
@@ -24,7 +24,7 @@ Complete API reference for controlling the YouTube Dashboard remotely.
 
 ## Getting Started
 
-The YouTube Dashboard API allows you to remotely control video playback on connected dashboard displays. All control commands are broadcast to all connected clients in real-time via WebSocket.
+The Liveboard API allows you to remotely control video playback on connected dashboard displays. All control commands are broadcast to all connected clients in real-time via WebSocket.
 
 ### Prerequisites
 - Dashboard server must be running
@@ -627,7 +627,7 @@ class YouTubeDashboardAPI {
 ```bash
 #!/bin/bash
 
-# YouTube Dashboard API Control Script
+# Liveboard API Control Script
 BASE_URL="http://localhost:1212"
 
 # Function to play a video

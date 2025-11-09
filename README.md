@@ -1,4 +1,4 @@
-# YouTube Dashboard
+# Liveboard
 
 A web application with an API listener that receives YouTube URLs and plays them in real-time using WebSockets.
 

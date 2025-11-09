@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Dashboard</title>
+    <title>Liveboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>YouTube Dashboard</h1>
+            <h1>Liveboard</h1>
             <div class="header-right">
                 <button class="compact-toggle-btn active" id="toggleSidebar" title="Toggle Info Panels">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -27,9 +27,27 @@
                         <path d="M7 16h10"></path>
                     </svg>
                 </button>
-                <a href="/documentation" class="doc-link" target="_blank">📖 Docs</a>
-                <a href="/api-docs" class="doc-link" target="_blank">⚙️ API</a>
-                <a href="/keys" class="doc-link">🔐 Keys</a>
+                <a href="/documentation" class="doc-link" target="_blank">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    Docs
+                </a>
+                <a href="/api-docs" class="doc-link" target="_blank">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6"></path>
+                        <path d="m1 12h6m6 0h6"></path>
+                    </svg>
+                    API
+                </a>
+                <a href="/keys" class="doc-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                    </svg>
+                    Keys
+                </a>
                 <div class="status">
                     <span class="status-indicator" id="statusIndicator"></span>
                     <span id="statusText">Connecting...</span>

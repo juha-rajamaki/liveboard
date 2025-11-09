@@ -739,7 +739,7 @@ app.get('/documentation', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Documentation - YouTube Dashboard</title>
+    <title>API Documentation - Liveboard</title>
     <style>
         * {
             margin: 0;
@@ -949,7 +949,7 @@ app.get('/documentation', (req, res) => {
         <div class="header-content">
             <div>
                 <h1>API Documentation</h1>
-                <p>Complete reference for the YouTube Dashboard API</p>
+                <p>Complete reference for the Liveboard API</p>
             </div>
             <a href="/" class="back-link">← Back to Dashboard</a>
         </div>
@@ -1004,7 +1004,7 @@ app.get('/api-docs', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Documentation - YouTube Dashboard</title>
+    <title>API Documentation - Liveboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui.css">
     <style>
         body {
