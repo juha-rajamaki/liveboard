@@ -244,6 +244,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Serve the documentation page
+app.get('/documentation', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'documentation.html'));
+});
+
+// Serve the API documentation markdown file
+app.get('/API_DOCUMENTATION.md', (req, res) => {
+  res.sendFile(path.join(__dirname, 'API_DOCUMENTATION.md'));
+});
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Dashboard: http://localhost:${PORT}`);

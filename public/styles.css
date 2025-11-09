@@ -33,6 +33,26 @@ header h1 {
     font-size: 2em;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.doc-link {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    transition: background 0.3s;
+}
+
+.doc-link:hover {
+    background: #5568d3;
+}
+
 .status {
     display: flex;
     align-items: center;
