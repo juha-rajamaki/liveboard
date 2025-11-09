@@ -37,17 +37,62 @@ const io = socketIo(server, {
 });
 
 const PORT = process.env.PORT || 1212;
+const crypto = require('crypto');
 
-// Load and validate API keys from environment
-const API_KEYS = (process.env.API_KEYS || '')
-  .split(',')
-  .map(key => key.trim())
-  .filter(key => key.length > 0);
+// API Keys storage file
+const API_KEYS_FILE = path.join(__dirname, 'api-keys.json');
+
+// Load API keys from JSON file
+function loadApiKeys() {
+  try {
+    if (fs.existsSync(API_KEYS_FILE)) {
+      const data = fs.readFileSync(API_KEYS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading API keys file:', error.message);
+  }
+  return [];
+}
+
+// Save API keys to JSON file
+function saveApiKeys(keys) {
+  try {
+    fs.writeFileSync(API_KEYS_FILE, JSON.stringify(keys, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error saving API keys file:', error.message);
+    return false;
+  }
+}
+
+// Get all valid API keys (from both .env and JSON file)
+function getAllApiKeys() {
+  // Load from .env
+  const envKeys = (process.env.API_KEYS || '')
+    .split(',')
+    .map(key => key.trim())
+    .filter(key => key.length > 0);
+
+  // Load from JSON file
+  const fileKeys = loadApiKeys().map(k => k.key);
+
+  // Combine and deduplicate
+  return [...new Set([...envKeys, ...fileKeys])];
+}
+
+// Load API keys
+let API_KEYS = getAllApiKeys();
 
 // Validate API keys on startup
 if (API_KEYS.length === 0 || API_KEYS.includes('your-secret-api-key-change-this-in-production')) {
   console.warn('⚠️  WARNING: Using default or no API keys! Please set secure API_KEYS in .env file');
   console.warn('⚠️  Generate secure keys with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+}
+
+// Generate a new API key
+function generateApiKey() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Authentication middleware
@@ -62,7 +107,10 @@ function requireApiKey(req, res, next) {
     });
   }
 
-  if (!API_KEYS.includes(apiKey)) {
+  // Dynamically reload keys to include newly added ones
+  const currentKeys = getAllApiKeys();
+
+  if (!currentKeys.includes(apiKey)) {
     console.warn(`[AUTH] Invalid API key attempt from IP: ${req.ip}`);
     return res.status(401).json({
       success: false,
@@ -280,9 +328,135 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Admin API endpoints for key management
+// Generate a new API key (doesn't save it)
+app.post('/api/admin/keys/generate', requireApiKey, (req, res) => {
+  const newKey = generateApiKey();
+  res.json({
+    success: true,
+    key: newKey,
+    message: 'New API key generated. Use the /api/admin/keys endpoint to save it.'
+  });
+});
+
+// List all API keys (masked for security)
+app.get('/api/admin/keys', requireApiKey, (req, res) => {
+  const fileKeys = loadApiKeys();
+  const envKeys = (process.env.API_KEYS || '')
+    .split(',')
+    .map(key => key.trim())
+    .filter(key => key.length > 0);
+
+  const maskedKeys = fileKeys.map(k => ({
+    id: k.id,
+    name: k.name,
+    key: k.key.substring(0, 8) + '...' + k.key.substring(k.key.length - 4),
+    createdAt: k.createdAt,
+    source: 'file'
+  }));
+
+  const maskedEnvKeys = envKeys.map((key, index) => ({
+    id: `env-${index}`,
+    name: 'Environment Variable',
+    key: key.substring(0, 8) + '...' + key.substring(key.length - 4),
+    createdAt: null,
+    source: 'env'
+  }));
+
+  res.json({
+    success: true,
+    keys: [...maskedKeys, ...maskedEnvKeys]
+  });
+});
+
+// Create a new API key
+app.post('/api/admin/keys', requireApiKey, (req, res) => {
+  const { name, key } = req.body;
+
+  if (!name || !key) {
+    return res.status(400).json({
+      success: false,
+      error: 'Name and key are required'
+    });
+  }
+
+  if (key.length < 32) {
+    return res.status(400).json({
+      success: false,
+      error: 'API key must be at least 32 characters long'
+    });
+  }
+
+  const fileKeys = loadApiKeys();
+
+  // Check if key already exists
+  if (fileKeys.some(k => k.key === key) || getAllApiKeys().includes(key)) {
+    return res.status(400).json({
+      success: false,
+      error: 'API key already exists'
+    });
+  }
+
+  const newKeyEntry = {
+    id: crypto.randomBytes(16).toString('hex'),
+    name: name.trim(),
+    key: key,
+    createdAt: new Date().toISOString()
+  };
+
+  fileKeys.push(newKeyEntry);
+
+  if (saveApiKeys(fileKeys)) {
+    res.json({
+      success: true,
+      message: 'API key created successfully',
+      keyId: newKeyEntry.id
+    });
+  } else {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save API key'
+    });
+  }
+});
+
+// Delete an API key
+app.delete('/api/admin/keys/:id', requireApiKey, (req, res) => {
+  const { id } = req.params;
+  const fileKeys = loadApiKeys();
+
+  const keyIndex = fileKeys.findIndex(k => k.id === id);
+
+  if (keyIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'API key not found or cannot be deleted (environment keys cannot be deleted via API)'
+    });
+  }
+
+  fileKeys.splice(keyIndex, 1);
+
+  if (saveApiKeys(fileKeys)) {
+    res.json({
+      success: true,
+      message: 'API key deleted successfully'
+    });
+  } else {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete API key'
+    });
+  }
+});
+
 // Serve the dashboard
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Serve the API key management page
+app.get('/admin/keys', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-keys.html'));
 });
 
 // Serve the documentation page with server-side markdown rendering

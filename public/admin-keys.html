@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Management - YouTube Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            color: #667eea;
+            font-size: 1.8em;
+        }
+
+        .back-link {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .back-link:hover {
+            background: #5568d3;
+        }
+
+        .auth-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .auth-section.hidden {
+            display: none;
+        }
+
+        .auth-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .main-content.visible {
+            display: block;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .generate-section {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .generate-section .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .keys-list {
+            margin-top: 20px;
+        }
+
+        .key-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .key-info {
+            flex: 1;
+        }
+
+        .key-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .key-value {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .key-meta {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .key-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
+
+        .badge-env {
+            background: #28a745;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .generated-key {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #ffc107;
+            margin: 15px 0;
+        }
+
+        .generated-key-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: #ffc107;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #ffb300;
+        }
+
+        .no-keys {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 API Key Management</h1>
+            <a href="/" class="back-link">← Back to Dashboard</a>
+        </header>
+
+        <!-- Authentication Section -->
+        <div class="auth-section" id="authSection">
+            <h2>Authentication Required</h2>
+            <p style="color: #666; margin-bottom: 20px;">Enter your existing API key to manage keys:</p>
+            <div class="form-group">
+                <label for="authApiKey">API Key:</label>
+                <input type="password" id="authApiKey" placeholder="Enter your API key" autocomplete="off">
+            </div>
+            <button class="btn" onclick="authenticate()">Login</button>
+            <div id="authError"></div>
+        </div>
+
+        <!-- Main Content (hidden until authenticated) -->
+        <div class="main-content" id="mainContent">
+            <!-- Generate New Key Section -->
+            <div class="panel">
+                <h2>Generate New API Key</h2>
+                <div id="alertContainer"></div>
+                <div id="generatedKeyContainer"></div>
+                <div class="generate-section">
+                    <div class="form-group">
+                        <label for="keyName">Key Name:</label>
+                        <input type="text" id="keyName" placeholder="e.g., Home Automation, Mobile App">
+                    </div>
+                    <button class="btn" onclick="generateKey()">Generate Key</button>
+                </div>
+                <div id="generatedKey" style="display: none;" class="generated-key">
+                    <strong>🔑 New API Key Generated:</strong>
+                    <div class="generated-key-value" id="generatedKeyValue"></div>
+                    <p style="color: #856404; margin: 10px 0;">⚠️ Save this key securely! It won't be shown again.</p>
+                    <button class="copy-btn" onclick="copyGeneratedKey()">📋 Copy Key</button>
+                    <button class="btn" onclick="saveGeneratedKey()">💾 Save Key</button>
+                </div>
+            </div>
+
+            <!-- Existing Keys Section -->
+            <div class="panel">
+                <h2>API Keys</h2>
+                <div class="keys-list" id="keysList">
+                    <div class="no-keys">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentApiKey = '';
+        let currentGeneratedKey = '';
+
+        // Authenticate user
+        async function authenticate() {
+            const apiKey = document.getElementById('authApiKey').value.trim();
+            const errorDiv = document.getElementById('authError');
+
+            if (!apiKey) {
+                showAuthError('Please enter an API key');
+                return;
+            }
+
+            try {
+                // Test the API key by calling the keys list endpoint
+                const response = await fetch('/api/admin/keys', {
+                    headers: {
+                        'X-API-Key': apiKey
+                    }
+                });
+
+                if (response.ok) {
+                    currentApiKey = apiKey;
+                    document.getElementById('authSection').classList.add('hidden');
+                    document.getElementById('mainContent').classList.add('visible');
+                    loadKeys();
+                } else {
+                    showAuthError('Invalid API key');
+                }
+            } catch (error) {
+                showAuthError('Authentication failed: ' + error.message);
+            }
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.innerHTML = `<div class="alert alert-error" style="margin-top: 15px;">${message}</div>`;
+        }
+
+        // Generate a new API key
+        async function generateKey() {
+            const keyName = document.getElementById('keyName').value.trim();
+
+            if (!keyName) {
+                showAlert('error', 'Please enter a name for the key');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/keys/generate', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': currentApiKey
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentGeneratedKey = result.key;
+                    document.getElementById('generatedKeyValue').textContent = result.key;
+                    document.getElementById('generatedKey').style.display = 'block';
+                } else {
+                    showAlert('error', result.error || 'Failed to generate key');
+                }
+            } catch (error) {
+                showAlert('error', 'Error generating key: ' + error.message);
+            }
+        }
+
+        // Copy generated key to clipboard
+        function copyGeneratedKey() {
+            navigator.clipboard.writeText(currentGeneratedKey).then(() => {
+                showAlert('success', 'Key copied to clipboard!');
+            }).catch(err => {
+                showAlert('error', 'Failed to copy key');
+            });
+        }
+
+        // Save the generated key
+        async function saveGeneratedKey() {
+            const keyName = document.getElementById('keyName').value.trim();
+
+            try {
+                const response = await fetch('/api/admin/keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': currentApiKey
+                    },
+                    body: JSON.stringify({
+                        name: keyName,
+                        key: currentGeneratedKey
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', 'API key saved successfully!');
+                    document.getElementById('generatedKey').style.display = 'none';
+                    document.getElementById('keyName').value = '';
+                    currentGeneratedKey = '';
+                    loadKeys();
+                } else {
+                    showAlert('error', result.error || 'Failed to save key');
+                }
+            } catch (error) {
+                showAlert('error', 'Error saving key: ' + error.message);
+            }
+        }
+
+        // Load all keys
+        async function loadKeys() {
+            try {
+                const response = await fetch('/api/admin/keys', {
+                    headers: {
+                        'X-API-Key': currentApiKey
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayKeys(result.keys);
+                } else {
+                    showAlert('error', 'Failed to load keys');
+                }
+            } catch (error) {
+                showAlert('error', 'Error loading keys: ' + error.message);
+            }
+        }
+
+        // Display keys in the list
+        function displayKeys(keys) {
+            const keysList = document.getElementById('keysList');
+
+            if (keys.length === 0) {
+                keysList.innerHTML = '<div class="no-keys">No API keys found</div>';
+                return;
+            }
+
+            keysList.innerHTML = keys.map(key => `
+                <div class="key-item">
+                    <div class="key-info">
+                        <div class="key-name">
+                            ${escapeHtml(key.name)}
+                            <span class="badge ${key.source === 'env' ? 'badge-env' : ''}">${key.source.toUpperCase()}</span>
+                        </div>
+                        <div class="key-value">${escapeHtml(key.key)}</div>
+                        ${key.createdAt ? `<div class="key-meta">Created: ${new Date(key.createdAt).toLocaleString()}</div>` : ''}
+                    </div>
+                    <div class="key-actions">
+                        ${key.source === 'file' ? `<button class="btn btn-danger btn-small" onclick="deleteKey('${key.id}', '${escapeHtml(key.name)}')">Delete</button>` : '<span style="color: #999; font-size: 0.85em;">Cannot delete</span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Delete a key
+        async function deleteKey(keyId, keyName) {
+            if (!confirm(`Are you sure you want to delete the key "${keyName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-API-Key': currentApiKey
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', 'API key deleted successfully');
+                    loadKeys();
+                } else {
+                    showAlert('error', result.error || 'Failed to delete key');
+                }
+            } catch (error) {
+                showAlert('error', 'Error deleting key: ' + error.message);
+            }
+        }
+
+        // Show alert message
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            alertContainer.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to authenticate
+        document.getElementById('authApiKey').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                authenticate();
+            }
+        });
+    </script>
+</body>
+</html>
