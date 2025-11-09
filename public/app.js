@@ -82,9 +82,8 @@ function playVideo(url) {
         return;
     }
 
-    // Hide placeholder and show player
+    // Hide placeholder to show player underneath
     placeholder.classList.add('hidden');
-    playerElement.classList.add('active');
 
     // Load and play video
     player.loadVideoById(videoId);

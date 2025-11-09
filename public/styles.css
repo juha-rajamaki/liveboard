@@ -74,11 +74,14 @@ main {
 #player {
     width: 100%;
     height: 100%;
-    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-#player.active {
-    display: block;
+#player iframe {
+    width: 100%;
+    height: 100%;
 }
 
 .placeholder {
@@ -89,6 +92,9 @@ main {
     justify-content: center;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: white;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .placeholder.hidden {
