@@ -311,20 +311,19 @@
             <div class="panel">
                 <h2>Generate New API Key</h2>
                 <div id="alertContainer"></div>
-                <div id="generatedKeyContainer"></div>
                 <div class="generate-section">
                     <div class="form-group">
                         <label for="keyName">Key Name:</label>
                         <input type="text" id="keyName" placeholder="e.g., Home Automation, Mobile App">
                     </div>
-                    <button class="btn" onclick="generateKey()">Generate Key</button>
+                    <button class="btn" onclick="generateAndSaveKey()">Generate & Save Key</button>
                 </div>
                 <div id="generatedKey" style="display: none;" class="generated-key">
-                    <strong>🔑 New API Key Generated:</strong>
+                    <strong>✅ New API Key Generated and Saved!</strong>
                     <div class="generated-key-value" id="generatedKeyValue"></div>
-                    <p style="color: #856404; margin: 10px 0;">⚠️ Save this key securely! It won't be shown again.</p>
+                    <p style="color: #856404; margin: 10px 0;">⚠️ Copy this key now! It won't be shown again for security.</p>
                     <button class="copy-btn" onclick="copyGeneratedKey()">📋 Copy Key</button>
-                    <button class="btn" onclick="saveGeneratedKey()">💾 Save Key</button>
+                    <button class="btn btn-secondary btn-small" onclick="closeGeneratedKey()">Close</button>
                 </div>
             </div>
 
@@ -378,8 +377,8 @@
             errorDiv.innerHTML = `<div class="alert alert-error" style="margin-top: 15px;">${message}</div>`;
         }
 
-        // Generate a new API key
-        async function generateKey() {
+        // Generate and save a new API key
+        async function generateAndSaveKey() {
             const keyName = document.getElementById('keyName').value.trim();
 
             if (!keyName) {
@@ -388,11 +387,15 @@
             }
 
             try {
-                const response = await fetch('/api/admin/keys/generate', {
+                const response = await fetch('/api/admin/keys', {
                     method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
                         'X-API-Key': currentApiKey
-                    }
+                    },
+                    body: JSON.stringify({
+                        name: keyName
+                    })
                 });
 
                 const result = await response.json();
@@ -401,6 +404,8 @@
                     currentGeneratedKey = result.key;
                     document.getElementById('generatedKeyValue').textContent = result.key;
                     document.getElementById('generatedKey').style.display = 'block';
+                    document.getElementById('keyName').value = '';
+                    loadKeys();
                 } else {
                     showAlert('error', result.error || 'Failed to generate key');
                 }
@@ -418,37 +423,10 @@
             });
         }
 
-        // Save the generated key
-        async function saveGeneratedKey() {
-            const keyName = document.getElementById('keyName').value.trim();
-
-            try {
-                const response = await fetch('/api/admin/keys', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': currentApiKey
-                    },
-                    body: JSON.stringify({
-                        name: keyName,
-                        key: currentGeneratedKey
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showAlert('success', 'API key saved successfully!');
-                    document.getElementById('generatedKey').style.display = 'none';
-                    document.getElementById('keyName').value = '';
-                    currentGeneratedKey = '';
-                    loadKeys();
-                } else {
-                    showAlert('error', result.error || 'Failed to save key');
-                }
-            } catch (error) {
-                showAlert('error', 'Error saving key: ' + error.message);
-            }
+        // Close the generated key display
+        function closeGeneratedKey() {
+            document.getElementById('generatedKey').style.display = 'none';
+            currentGeneratedKey = '';
         }
 
         // Load all keys

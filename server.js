@@ -329,14 +329,43 @@ app.get('/api/health', (req, res) => {
 });
 
 // Admin API endpoints for key management
-// Generate a new API key (doesn't save it)
-app.post('/api/admin/keys/generate', requireApiKey, (req, res) => {
+// Generate and save a new API key
+app.post('/api/admin/keys', requireApiKey, (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({
+      success: false,
+      error: 'Name is required'
+    });
+  }
+
+  // Generate a secure random key
   const newKey = generateApiKey();
-  res.json({
-    success: true,
+  const fileKeys = loadApiKeys();
+
+  const newKeyEntry = {
+    id: crypto.randomBytes(16).toString('hex'),
+    name: name.trim(),
     key: newKey,
-    message: 'New API key generated. Use the /api/admin/keys endpoint to save it.'
-  });
+    createdAt: new Date().toISOString()
+  };
+
+  fileKeys.push(newKeyEntry);
+
+  if (saveApiKeys(fileKeys)) {
+    res.json({
+      success: true,
+      message: 'API key generated and saved successfully',
+      key: newKey,
+      keyId: newKeyEntry.id
+    });
+  } else {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save API key'
+    });
+  }
 });
 
 // List all API keys (masked for security)
@@ -367,57 +396,6 @@ app.get('/api/admin/keys', requireApiKey, (req, res) => {
     success: true,
     keys: [...maskedKeys, ...maskedEnvKeys]
   });
-});
-
-// Create a new API key
-app.post('/api/admin/keys', requireApiKey, (req, res) => {
-  const { name, key } = req.body;
-
-  if (!name || !key) {
-    return res.status(400).json({
-      success: false,
-      error: 'Name and key are required'
-    });
-  }
-
-  if (key.length < 32) {
-    return res.status(400).json({
-      success: false,
-      error: 'API key must be at least 32 characters long'
-    });
-  }
-
-  const fileKeys = loadApiKeys();
-
-  // Check if key already exists
-  if (fileKeys.some(k => k.key === key) || getAllApiKeys().includes(key)) {
-    return res.status(400).json({
-      success: false,
-      error: 'API key already exists'
-    });
-  }
-
-  const newKeyEntry = {
-    id: crypto.randomBytes(16).toString('hex'),
-    name: name.trim(),
-    key: key,
-    createdAt: new Date().toISOString()
-  };
-
-  fileKeys.push(newKeyEntry);
-
-  if (saveApiKeys(fileKeys)) {
-    res.json({
-      success: true,
-      message: 'API key created successfully',
-      keyId: newKeyEntry.id
-    });
-  } else {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to save API key'
-    });
-  }
 });
 
 // Delete an API key
