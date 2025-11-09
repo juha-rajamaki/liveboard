@@ -42,11 +42,13 @@ function onYouTubeIframeAPIReady() {
             autoplay: 1,
             controls: 1,
             modestbranding: 1,
-            rel: 0
+            rel: 0,
+            hd: 1  // Enable HD playback
         },
         events: {
             onReady: onPlayerReady,
-            onError: onPlayerError
+            onError: onPlayerError,
+            onStateChange: onPlayerStateChange
         }
     });
 }
@@ -54,6 +56,22 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     isPlayerReady = true;
     console.log('YouTube player is ready');
+}
+
+function onPlayerStateChange(event) {
+    // Set quality to highest available when video loads or plays
+    if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
+        try {
+            const availableQualityLevels = player.getAvailableQualityLevels();
+            if (availableQualityLevels && availableQualityLevels.length > 0) {
+                // Set to highest quality (first in array is highest)
+                player.setPlaybackQuality(availableQualityLevels[0]);
+                console.log('Set video quality to:', availableQualityLevels[0]);
+            }
+        } catch (e) {
+            console.warn('Could not set quality:', e);
+        }
+    }
 }
 
 function onPlayerError(event) {
@@ -300,8 +318,11 @@ function playVideo(url, addToHistoryFlag = true) {
     // Hide placeholder to show player underneath
     placeholder.classList.add('hidden');
 
-    // Load and play video
-    player.loadVideoById(videoId);
+    // Load and play video with highest quality
+    player.loadVideoById({
+        videoId: videoId,
+        suggestedQuality: 'highres'  // Request highest quality (4K/1440p/1080p)
+    });
 
     // Update current URL display
     currentUrlElement.textContent = url;
