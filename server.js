@@ -81,8 +81,9 @@ app.use((req, res, next) => {
       "script-src 'self' https://www.youtube.com https://cdn.socket.io https://cdn.jsdelivr.net",
       "frame-src 'self' https://www.youtube.com",
       "connect-src 'self' ws://localhost:1212 wss://localhost:1212 https://www.youtube.com",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' https: data:",
+      "font-src 'self' data:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'"
@@ -500,8 +501,72 @@ app.get('/API_DOCUMENTATION.md', (req, res) => {
   res.sendFile(path.join(__dirname, 'API_DOCUMENTATION.md'));
 });
 
+// Serve OpenAPI specification (machine-readable)
+app.get('/openapi.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'openapi.json'));
+});
+
+// Serve Swagger UI for interactive API documentation
+app.get('/api-docs', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - YouTube Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .topbar {
+            display: none;
+        }
+        .swagger-ui .info {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: '/openapi.json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                docExpansion: 'list',
+                filter: true,
+                tryItOutEnabled: true
+            });
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>
+  `;
+  res.send(html);
+});
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Dashboard: http://localhost:${PORT}`);
   console.log(`API endpoint: POST http://localhost:${PORT}/api/play`);
+  console.log(`Human docs: http://localhost:${PORT}/documentation`);
+  console.log(`Machine docs: http://localhost:${PORT}/openapi.json`);
+  console.log(`Interactive docs: http://localhost:${PORT}/api-docs`);
 });

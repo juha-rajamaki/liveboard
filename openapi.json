@@ -1,0 +1,476 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "YouTube Dashboard API",
+    "description": "REST API for remote control of YouTube video playback on connected dashboard displays via WebSocket broadcasting.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "GitHub Repository",
+      "url": "https://github.com/juha-rajamaki/dashboard"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:1212",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Video Control",
+      "description": "Endpoints for controlling video playback"
+    },
+    {
+      "name": "Display Control",
+      "description": "Endpoints for controlling display settings"
+    },
+    {
+      "name": "System",
+      "description": "System health and status endpoints"
+    }
+  ],
+  "paths": {
+    "/api/play": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Play video on all connected dashboards",
+        "description": "Broadcasts a YouTube URL to all connected dashboard clients via WebSocket. Video will start playing automatically at the highest available quality.",
+        "operationId": "playVideo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayVideoRequest"
+              },
+              "examples": {
+                "standardUrl": {
+                  "summary": "Standard YouTube URL",
+                  "value": {
+                    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                  }
+                },
+                "shortUrl": {
+                  "summary": "Short YouTube URL",
+                  "value": {
+                    "url": "https://youtu.be/dQw4w9WgXcQ"
+                  }
+                },
+                "embedUrl": {
+                  "summary": "Embed YouTube URL",
+                  "value": {
+                    "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+                  }
+                },
+                "videoId": {
+                  "summary": "Video ID only",
+                  "value": {
+                    "url": "dQw4w9WgXcQ"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video URL successfully sent to all dashboards",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Video URL sent to dashboard",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/pause": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Pause video on all dashboards",
+        "description": "Broadcasts a pause command to all connected dashboard clients via WebSocket.",
+        "operationId": "pauseVideo",
+        "responses": {
+          "200": {
+            "description": "Pause command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Pause command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/resume": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Resume video on all dashboards",
+        "description": "Broadcasts a resume/play command to all connected dashboard clients via WebSocket.",
+        "operationId": "resumeVideo",
+        "responses": {
+          "200": {
+            "description": "Resume command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Resume command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/stop": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Stop video on all dashboards",
+        "description": "Broadcasts a stop command to all connected dashboard clients via WebSocket. Video will stop and return to placeholder screen.",
+        "operationId": "stopVideo",
+        "responses": {
+          "200": {
+            "description": "Stop command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Stop command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/fullscreen": {
+      "post": {
+        "tags": ["Display Control"],
+        "summary": "Enter fullscreen mode",
+        "description": "Broadcasts a fullscreen command to all connected dashboard clients via WebSocket. Note: May require user interaction in some browsers due to security restrictions.",
+        "operationId": "enterFullscreen",
+        "responses": {
+          "200": {
+            "description": "Fullscreen command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Fullscreen command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/exitfullscreen": {
+      "post": {
+        "tags": ["Display Control"],
+        "summary": "Exit fullscreen mode",
+        "description": "Broadcasts an exit fullscreen command to all connected dashboard clients via WebSocket.",
+        "operationId": "exitFullscreen",
+        "responses": {
+          "200": {
+            "description": "Exit fullscreen command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Exit fullscreen command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check endpoint",
+        "description": "Returns server status and number of connected dashboard clients.",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "connectedClients": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PlayVideoRequest": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "YouTube video URL or video ID. Supported formats: full URL (youtube.com/watch?v=), short URL (youtu.be/), embed URL (youtube.com/embed/), or 11-character video ID.",
+            "pattern": "^(https?:\\/\\/(www\\.)?youtube\\.com\\/watch\\?v=[a-zA-Z0-9_-]{11}(&.*)?|https?:\\/\\/youtu\\.be\\/[a-zA-Z0-9_-]{11}|https?:\\/\\/(www\\.)?youtube\\.com\\/embed\\/[a-zA-Z0-9_-]{11}|[a-zA-Z0-9_-]{11})$",
+            "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the operation was successful",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message describing the result",
+            "example": "Video URL sent to dashboard"
+          },
+          "clients": {
+            "type": "integer",
+            "description": "Number of connected dashboard clients that received the command",
+            "example": 2
+          }
+        },
+        "required": ["success", "message", "clients"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Always false for error responses",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message describing what went wrong",
+            "example": "Invalid YouTube URL format"
+          }
+        },
+        "required": ["success", "error"]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"],
+            "description": "Server health status",
+            "example": "ok"
+          },
+          "connectedClients": {
+            "type": "integer",
+            "description": "Number of dashboard clients currently connected via WebSocket",
+            "example": 2
+          }
+        },
+        "required": ["status", "connectedClients"]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - invalid or missing parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "missingUrl": {
+                "summary": "Missing URL parameter",
+                "value": {
+                  "success": false,
+                  "error": "URL is required"
+                }
+              },
+              "invalidUrl": {
+                "summary": "Invalid URL format",
+                "value": {
+                  "success": false,
+                  "error": "Invalid YouTube URL format"
+                }
+              },
+              "urlTooLong": {
+                "summary": "URL exceeds maximum length",
+                "value": {
+                  "success": false,
+                  "error": "URL too long"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "globalLimit": {
+                "summary": "Global rate limit exceeded",
+                "value": {
+                  "success": false,
+                  "error": "Too many requests, please try again later"
+                }
+              },
+              "videoLimit": {
+                "summary": "Video control rate limit exceeded",
+                "value": {
+                  "success": false,
+                  "error": "Too many video requests, please slow down"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-rate-limits": {
+    "global": {
+      "window": "15 minutes",
+      "maxRequests": 100,
+      "description": "Global rate limit for all API endpoints"
+    },
+    "videoControls": {
+      "window": "1 minute",
+      "maxRequests": 30,
+      "description": "Rate limit for video control endpoints (/api/play, /api/pause, /api/resume, /api/stop, /api/fullscreen, /api/exitfullscreen)"
+    }
+  },
+  "x-websocket-events": {
+    "url": "ws://localhost:1212",
+    "protocol": "socket.io",
+    "events": {
+      "play-video": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/play endpoint is called",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "YouTube URL to play",
+              "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            }
+          }
+        }
+      },
+      "control-pause": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/pause endpoint is called",
+        "payload": null
+      },
+      "control-resume": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/resume endpoint is called",
+        "payload": null
+      },
+      "control-stop": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/stop endpoint is called",
+        "payload": null
+      },
+      "control-fullscreen": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/fullscreen endpoint is called",
+        "payload": null
+      },
+      "control-exitfullscreen": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/exitfullscreen endpoint is called",
+        "payload": null
+      },
+      "connect": {
+        "direction": "bidirectional",
+        "description": "Client connected to WebSocket server",
+        "payload": null
+      },
+      "disconnect": {
+        "direction": "bidirectional",
+        "description": "Client disconnected from WebSocket server",
+        "payload": null
+      }
+    }
+  },
+  "x-security-features": {
+    "cors": {
+      "allowedOrigins": [
+        "http://localhost:1212",
+        "http://127.0.0.1:1212"
+      ],
+      "credentials": true
+    },
+    "requestBodyLimit": "10kb",
+    "urlValidation": true,
+    "contentSecurityPolicy": true
+  }
+}
