@@ -924,9 +924,9 @@ socket.on('connected-clients', (data) => {
 // Handle new client connection notification
 socket.on('client-connected', (data) => {
     console.log('New client connected:', data);
-    if (data.name && data.name !== 'Unknown Device') {
-        showToast('New Connection', `${data.name} connected`, 'success', 4000);
-    }
+    // Always show notification with device name (use "Unknown" as fallback)
+    const deviceName = data.deviceName || 'Unknown';
+    showToast('Device Connected', `${deviceName} has joined`, 'success', 5000);
 });
 
 socket.on('play-video', (data) => {
@@ -1091,9 +1091,9 @@ socket.on('control-seek-forward', () => {
     }
 });
 
-// Play Now button handler - adds to top of playlist and plays immediately
+// Play Now button handler - plays immediately
 if (playNowButton) {
-    playNowButton.addEventListener('click', async () => {
+    playNowButton.addEventListener('click', () => {
         const url = testUrl.value.trim();
 
         if (!url) {
@@ -1107,20 +1107,15 @@ if (playNowButton) {
             return;
         }
 
-        // Add to top of playlist
-        const addedIndex = await addToPlaylist(url, null, true);
+        // Play immediately
+        playVideo(url);
         testUrl.value = '';
-
-        // Play the newly added video (it's at the top - index 0, or existing index if already in playlist)
-        if (addedIndex !== undefined && addedIndex >= 0) {
-            playFromPlaylist(addedIndex);
-            console.log('Video added to top of playlist and playing now');
-        }
+        console.log('Playing video immediately');
     });
 }
 
-// Add to Playlist button handler - just adds to playlist
-testButton.addEventListener('click', () => {
+// Add to Playlist button handler - adds to playlist without playing
+testButton.addEventListener('click', async () => {
     const url = testUrl.value.trim();
 
     if (!url) {
@@ -1134,10 +1129,11 @@ testButton.addEventListener('click', () => {
         return;
     }
 
-    // Add to playlist and start playing immediately
-    playVideo(url);
+    // Add to end of playlist without playing
+    await addToPlaylist(url);
     testUrl.value = '';
-    console.log('Video added to playlist and playing');
+    showToast('Added to Playlist', 'Video queued in playlist', 'success', 3000);
+    console.log('Video added to playlist');
 });
 
 // Allow Enter key to submit
@@ -1169,6 +1165,51 @@ function toggleFullscreen() {
     // Update button text
     updateFullscreenButton();
 }
+
+// Exit fullscreen floating button functionality
+const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+let mouseInactivityTimer = null;
+
+// Show button when mouse moves to top right area
+document.addEventListener('mousemove', (e) => {
+    if (!document.body.classList.contains('fake-fullscreen-active')) return;
+
+    // Define hover area: top 150px and right 150px of screen
+    const isInTopRightArea = e.clientY < 150 && e.clientX > window.innerWidth - 150;
+
+    if (isInTopRightArea) {
+        exitFullscreenBtn.classList.add('visible');
+
+        // Clear any existing timer
+        clearTimeout(mouseInactivityTimer);
+
+        // Hide button after 3 seconds of no movement
+        mouseInactivityTimer = setTimeout(() => {
+            exitFullscreenBtn.classList.remove('visible');
+        }, 3000);
+    } else {
+        exitFullscreenBtn.classList.remove('visible');
+        clearTimeout(mouseInactivityTimer);
+    }
+});
+
+// Keep button visible when hovering over it
+exitFullscreenBtn.addEventListener('mouseenter', () => {
+    clearTimeout(mouseInactivityTimer);
+    exitFullscreenBtn.classList.add('visible');
+});
+
+exitFullscreenBtn.addEventListener('mouseleave', () => {
+    mouseInactivityTimer = setTimeout(() => {
+        exitFullscreenBtn.classList.remove('visible');
+    }, 1000);
+});
+
+// Click to exit fullscreen
+exitFullscreenBtn.addEventListener('click', () => {
+    toggleFullscreen();
+    exitFullscreenBtn.classList.remove('visible');
+});
 
 // Update fullscreen button icon when fullscreen state changes
 function updateFullscreenButton() {

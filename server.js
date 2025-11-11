@@ -342,12 +342,20 @@ io.on('connection', (socket) => {
           currentVideoTitle: dashboardState.currentVideoTitle,
           controls: [
             {
+              id: 'play-now',
+              name: 'Play Now',
+              type: 'text',
+              command: 'play-now',
+              placeholder: 'Enter YouTube URL',
+              description: 'Play a YouTube video immediately'
+            },
+            {
               id: 'play',
-              name: 'Play YouTube Video',
+              name: 'Add to Playlist',
               type: 'text',
               command: 'play',
               placeholder: 'Enter YouTube URL',
-              description: 'Play a YouTube video by URL'
+              description: 'Add a YouTube video to the playlist'
             },
             {
               id: 'volume',
@@ -454,7 +462,7 @@ io.on('connection', (socket) => {
           io.emit('connected-clients', { clients: connectedClients });
           // Notify all OTHER clients about the new connection
           socket.broadcast.emit('client-connected', {
-            name: deviceName,
+            deviceName: deviceName,
             id: socket.id,
             connectedAt: client.connectedAt
           });
@@ -512,10 +520,19 @@ io.on('connection', (socket) => {
         updateApiActivity();
 
         switch (message.command) {
+          case 'play-now':
+            if (message.value && isValidYouTubeUrl(message.value)) {
+              io.emit('play-video-now', { url: message.value });
+              console.log(`Playing video immediately: ${message.value}`);
+            } else {
+              console.warn('Invalid YouTube URL');
+            }
+            break;
+
           case 'play':
             if (message.value && isValidYouTubeUrl(message.value)) {
               io.emit('play-video', { url: message.value });
-              console.log(`Playing video: ${message.value}`);
+              console.log(`Adding video to playlist: ${message.value}`);
             } else {
               console.warn('Invalid YouTube URL');
             }
