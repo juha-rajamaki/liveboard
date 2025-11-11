@@ -14,6 +14,10 @@ Complete API reference for controlling the Liveboard remotely.
   - [Stop Video](#stop-video)
   - [Enter Fullscreen](#enter-fullscreen)
   - [Exit Fullscreen](#exit-fullscreen)
+  - [Set Volume](#set-volume)
+  - [Play Next](#play-next)
+  - [Play Previous](#play-previous)
+  - [Mute/Unmute](#muteunmute)
   - [Health Check](#health-check)
 - [Response Format](#response-format)
 - [Error Handling](#error-handling)
@@ -82,6 +86,10 @@ The following endpoints require authentication:
 - `POST /api/stop`
 - `POST /api/fullscreen`
 - `POST /api/exitfullscreen`
+- `POST /api/volume`
+- `POST /api/next`
+- `POST /api/previous`
+- `POST /api/mute`
 
 ### Public Endpoints
 
@@ -377,6 +385,184 @@ print(response.json())
 
 ---
 
+### Set Volume
+
+Sets the volume level on all connected dashboards.
+
+**Endpoint:** `POST /api/volume`
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "level": 50
+}
+```
+
+**Parameters:**
+- `level` (number, required): Volume level from 0 (muted) to 100 (maximum volume)
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "message": "Volume command sent to all dashboards",
+  "level": 50,
+  "clients": 2
+}
+```
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:1212/api/volume \
+  -H "Content-Type: application/json" \
+  -d '{"level": 50}'
+```
+
+**Example (Python):**
+```python
+import requests
+
+url = "http://localhost:1212/api/volume"
+payload = {"level": 50}
+
+response = requests.post(url, json=payload)
+print(response.json())
+```
+
+**Example (JavaScript):**
+```javascript
+fetch('http://localhost:1212/api/volume', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ level: 50 })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+**Validation:**
+- Volume level must be a number
+- Volume level must be between 0 and 100 (inclusive)
+
+**Error Response (Invalid Volume):**
+```json
+{
+  "success": false,
+  "error": "Volume level must be a number between 0 and 100"
+}
+```
+
+---
+
+### Play Next
+
+Plays the next video in the playlist on all connected dashboards.
+
+**Endpoint:** `POST /api/next`
+
+**Request Headers:** None required
+
+**Request Body:** None
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "message": "Play next command sent to all dashboards",
+  "clients": 2
+}
+```
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:1212/api/next
+```
+
+**Example (Python):**
+```python
+import requests
+
+response = requests.post("http://localhost:1212/api/next")
+print(response.json())
+```
+
+---
+
+### Play Previous
+
+Plays the previous video in the playlist on all connected dashboards.
+
+**Endpoint:** `POST /api/previous`
+
+**Request Headers:** None required
+
+**Request Body:** None
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "message": "Play previous command sent to all dashboards",
+  "clients": 2
+}
+```
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:1212/api/previous
+```
+
+**Example (Python):**
+```python
+import requests
+
+response = requests.post("http://localhost:1212/api/previous")
+print(response.json())
+```
+
+---
+
+### Mute/Unmute
+
+Toggles mute/unmute on all connected dashboards.
+
+**Endpoint:** `POST /api/mute`
+
+**Request Headers:** None required
+
+**Request Body:** None
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "message": "Mute/unmute command sent to all dashboards",
+  "clients": 2
+}
+```
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:1212/api/mute
+```
+
+**Example (Python):**
+```python
+import requests
+
+response = requests.post("http://localhost:1212/api/mute")
+print(response.json())
+```
+
+---
+
 ### Health Check
 
 Checks server status and number of connected clients.
@@ -516,6 +702,29 @@ class YouTubeDashboardAPI:
         response = requests.post(f"{self.base_url}/api/exitfullscreen")
         return response.json()
 
+    def set_volume(self, level):
+        """Set volume level (0-100)"""
+        response = requests.post(
+            f"{self.base_url}/api/volume",
+            json={"level": level}
+        )
+        return response.json()
+
+    def play_next(self):
+        """Play next video in playlist"""
+        response = requests.post(f"{self.base_url}/api/next")
+        return response.json()
+
+    def play_previous(self):
+        """Play previous video in playlist"""
+        response = requests.post(f"{self.base_url}/api/previous")
+        return response.json()
+
+    def mute(self):
+        """Toggle mute/unmute"""
+        response = requests.post(f"{self.base_url}/api/mute")
+        return response.json()
+
     def health_check(self):
         """Check server health and connected clients"""
         response = requests.get(f"{self.base_url}/api/health")
@@ -586,6 +795,26 @@ class YouTubeDashboardAPI {
 
     async exitFullscreen() {
         const response = await axios.post(`${this.baseUrl}/api/exitfullscreen`);
+        return response.data;
+    }
+
+    async setVolume(level) {
+        const response = await axios.post(`${this.baseUrl}/api/volume`, { level });
+        return response.data;
+    }
+
+    async playNext() {
+        const response = await axios.post(`${this.baseUrl}/api/next`);
+        return response.data;
+    }
+
+    async playPrevious() {
+        const response = await axios.post(`${this.baseUrl}/api/previous`);
+        return response.data;
+    }
+
+    async mute() {
+        const response = await axios.post(`${this.baseUrl}/api/mute`);
         return response.data;
     }
 
@@ -669,6 +898,15 @@ exit_fullscreen() {
     echo ""
 }
 
+# Function to set volume
+set_volume() {
+    local level="$1"
+    curl -X POST "$BASE_URL/api/volume" \
+        -H "Content-Type: application/json" \
+        -d "{\"level\": $level}"
+    echo ""
+}
+
 # Main script
 echo "Playing video..."
 play_video "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -725,6 +963,22 @@ socket.on('control-fullscreen', () => {
 
 socket.on('control-exitfullscreen', () => {
     console.log('Exit fullscreen command received');
+});
+
+socket.on('control-volume', (data) => {
+    console.log('Volume control received:', data.level);
+});
+
+socket.on('control-next', () => {
+    console.log('Play next command received');
+});
+
+socket.on('control-previous', () => {
+    console.log('Play previous command received');
+});
+
+socket.on('control-mute', () => {
+    console.log('Mute/unmute command received');
 });
 ```
 

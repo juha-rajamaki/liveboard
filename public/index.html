@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liveboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20251112030000">
 </head>
 <body>
     <div class="container">
@@ -17,14 +17,6 @@
                         <rect x="14" y="3" width="7" height="7"></rect>
                         <rect x="14" y="14" width="7" height="7"></rect>
                         <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                </button>
-                <button class="compact-toggle-btn active" id="toggleYTControls" title="Toggle YouTube Controls">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
-                        <circle cx="8" cy="8" r="2"></circle>
-                        <circle cx="16" cy="8" r="2"></circle>
-                        <path d="M7 16h10"></path>
                     </svg>
                 </button>
                 <a href="/documentation" class="doc-link" target="_blank">
@@ -48,83 +40,133 @@
                     </svg>
                     Keys
                 </a>
-                <div class="status">
-                    <span class="status-indicator" id="statusIndicator"></span>
-                    <span id="statusText">Connecting...</span>
+                <div class="status-group">
+                    <div class="status server-status" id="serverStatus" title="Server: Connecting...">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="status api-status" id="apiStatus" title="API Client: Disconnected">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </header>
 
         <main>
-            <div class="video-section">
-                <div class="video-container">
-                    <div id="player"></div>
-                    <div class="placeholder" id="placeholder">
-                        <div class="placeholder-content">
-                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="content-wrapper">
+                <div class="video-section">
+                    <div class="video-container">
+                        <div id="player"></div>
+                        <div class="placeholder" id="placeholder">
+                            <div class="placeholder-content">
+                                <div class="play-button-3d">
+                                    <div class="play-button-inner">
+                                        <div class="play-triangle"></div>
+                                    </div>
+                                </div>
+                                <p>Waiting for video URL...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="video-controls">
+                        <button id="seekBackBtn" class="control-btn" title="Seek Backward 10s">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                <path d="M3 3v5h5"></path>
+                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-weight="bold">10</text>
+                            </svg>
+                        </button>
+                        <button id="previousBtn" class="control-btn" title="Previous">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                <rect x="5" y="4" width="2" height="16"></rect>
+                            </svg>
+                        </button>
+                        <button id="pauseBtn" class="control-btn" title="Pause">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                        </button>
+                        <button id="playBtn" class="control-btn" title="Resume">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
                             </svg>
-                            <p>Waiting for video URL...</p>
+                        </button>
+                        <button id="stopBtn" class="control-btn" title="Stop">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="6" width="12" height="12"></rect>
+                            </svg>
+                        </button>
+                        <button id="nextBtn" class="control-btn" title="Next">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                <rect x="17" y="4" width="2" height="16"></rect>
+                            </svg>
+                        </button>
+                        <button id="seekForwardBtn" class="control-btn" title="Seek Forward 10s">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                                <path d="M21 3v5h-5"></path>
+                                <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-weight="bold">10</text>
+                            </svg>
+                        </button>
+                        <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                            </svg>
+                        </button>
+                        <button id="theaterModeBtn" class="control-btn" title="Theater Mode" aria-label="Toggle theater mode" aria-pressed="false">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
+                            </svg>
+                        </button>
+                        <div class="volume-control">
+                            <button id="muteBtn" class="control-btn" title="Mute">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                </svg>
+                            </button>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider" title="Volume">
+                            <span id="volumeValue" class="volume-value">100</span>
                         </div>
                     </div>
                 </div>
-
-                <div class="video-controls">
-                    <button id="pauseBtn" class="control-btn" title="Pause">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="4" width="4" height="16"></rect>
-                            <rect x="14" y="4" width="4" height="16"></rect>
-                        </svg>
-                    </button>
-                    <button id="playBtn" class="control-btn" title="Resume">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </button>
-                    <button id="stopBtn" class="control-btn" title="Stop">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="6" width="12" height="12"></rect>
-                        </svg>
-                    </button>
-                    <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                        </svg>
-                    </button>
-                </div>
             </div>
 
-            <div class="sidebar">
-                <div class="info-panel">
-                    <div class="panel-header">
-                        <h2>Current Video</h2>
-                        <button class="toggle-icon" id="toggleCurrentVideo" title="Toggle visibility">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
+            <div class="bottom-panels">
+                <div class="playlist-panel">
+                    <div class="playlist-header">
+                        <h2>Playlist</h2>
+                        <div class="playlist-header-actions">
+                            <button class="toggle-icon" id="togglePlaylist" title="Toggle visibility">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <button id="clearPlaylist" class="clear-btn" title="Clear Playlist">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="current-video-info" id="currentVideoContent">
-                        <p id="currentUrl">No video loaded</p>
-                        <button id="currentUrlIcon" class="url-icon" style="display: none;" title="Click to copy URL">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <h2>API Information</h2>
-                    <div class="api-info">
-                        <p><strong>Endpoint:</strong> POST /api/play</p>
-                        <p><strong>Body:</strong> <code>{ "url": "youtube_url" }</code></p>
-                    </div>
-
-                    <h2>Test API</h2>
-                    <div class="test-form">
-                        <input type="text" id="testUrl" placeholder="Enter YouTube URL" />
-                        <button id="testButton">Send to API</button>
-                    </div>
+                    <div id="playlistList" class="playlist-list"></div>
                 </div>
 
                 <div class="history-panel">
@@ -149,13 +191,82 @@
                     <div id="historyList" class="history-list"></div>
                 </div>
             </div>
+
+            <div class="sidebar">
+                <div class="info-panel">
+                    <div class="panel-header">
+                        <h2>Current Video</h2>
+                        <button class="toggle-icon" id="toggleCurrentVideo" title="Toggle visibility">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="current-video-info" id="currentVideoContent">
+                        <p id="currentUrl">No video loaded</p>
+                        <button id="currentUrlIcon" class="url-icon" style="display: none;" title="Click to copy URL">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <h2>Add Video</h2>
+                    <div class="test-form">
+                        <input type="text" id="testUrl" placeholder="Enter YouTube URL" />
+                        <div class="button-group">
+                            <button id="playNowButton" class="primary-btn">Play</button>
+                            <button id="testButton" class="secondary-btn">Add to Playlist</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
+
+    <!-- Exit Theater Mode Button -->
+    <button id="exitTheaterBtn" class="exit-theater-btn" title="Exit Theater Mode" style="display: none;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+    </button>
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Autoplay Enable Overlay -->
+    <div id="autoplayOverlay" class="autoplay-overlay" style="display: none;">
+        <div class="autoplay-prompt">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <h2>Enable Remote Playback</h2>
+            <p>Click below to allow videos to be played remotely from other devices</p>
+            <button id="enableAutoplayBtn" class="enable-autoplay-btn">Enable Playback</button>
+        </div>
+    </div>
+
+    <!-- Connected Users Modal -->
+    <div id="connectedUsersModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Connected Users</h2>
+                <button id="closeModalBtn" class="modal-close-btn" title="Close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="connectedUsersList" class="connected-users-list">
+                    <p class="loading-message">Loading connected users...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=20251112030000"></script>
 </body>
 </html>

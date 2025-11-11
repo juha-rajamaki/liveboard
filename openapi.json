@@ -285,6 +285,195 @@
         }
       }
     },
+    "/api/volume": {
+      "post": {
+        "tags": ["Display Control"],
+        "summary": "Set volume level",
+        "description": "Broadcasts a volume control command to all connected dashboard clients via WebSocket. Sets the playback volume from 0 (muted) to 100 (maximum).",
+        "operationId": "setVolume",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolumeRequest"
+              },
+              "examples": {
+                "mute": {
+                  "summary": "Mute volume",
+                  "value": {
+                    "level": 0
+                  }
+                },
+                "medium": {
+                  "summary": "Medium volume",
+                  "value": {
+                    "level": 50
+                  }
+                },
+                "maximum": {
+                  "summary": "Maximum volume",
+                  "value": {
+                    "level": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Volume command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolumeResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Volume command sent to all dashboards",
+                  "level": 50,
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid volume level",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Volume level must be a number between 0 and 100"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/next": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Play next video in playlist",
+        "description": "Broadcasts a next command to all connected dashboard clients via WebSocket. Plays the next video in the playlist.",
+        "operationId": "playNext",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Play next command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Play next command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/previous": {
+      "post": {
+        "tags": ["Video Control"],
+        "summary": "Play previous video in playlist",
+        "description": "Broadcasts a previous command to all connected dashboard clients via WebSocket. Plays the previous video in the playlist.",
+        "operationId": "playPrevious",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Play previous command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Play previous command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/mute": {
+      "post": {
+        "tags": ["Display Control"],
+        "summary": "Toggle mute/unmute",
+        "description": "Broadcasts a mute/unmute command to all connected dashboard clients via WebSocket. Toggles between muted and unmuted states.",
+        "operationId": "toggleMute",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mute/unmute command successfully sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Mute/unmute command sent to all dashboards",
+                  "clients": 2
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": ["System"],
@@ -325,6 +514,19 @@
           }
         }
       },
+      "VolumeRequest": {
+        "type": "object",
+        "required": ["level"],
+        "properties": {
+          "level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Volume level from 0 (muted) to 100 (maximum volume)",
+            "example": 50
+          }
+        }
+      },
       "SuccessResponse": {
         "type": "object",
         "properties": {
@@ -345,6 +547,32 @@
           }
         },
         "required": ["success", "message", "clients"]
+      },
+      "VolumeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the operation was successful",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable message describing the result",
+            "example": "Volume command sent to all dashboards"
+          },
+          "level": {
+            "type": "integer",
+            "description": "The volume level that was set",
+            "example": 50
+          },
+          "clients": {
+            "type": "integer",
+            "description": "Number of connected dashboard clients that received the command",
+            "example": 2
+          }
+        },
+        "required": ["success", "message", "level", "clients"]
       },
       "ErrorResponse": {
         "type": "object",
@@ -485,7 +713,7 @@
     "videoControls": {
       "window": "1 minute",
       "maxRequests": 30,
-      "description": "Rate limit for video control endpoints (/api/play, /api/pause, /api/resume, /api/stop, /api/fullscreen, /api/exitfullscreen)"
+      "description": "Rate limit for video control endpoints (/api/play, /api/pause, /api/resume, /api/stop, /api/fullscreen, /api/exitfullscreen, /api/volume, /api/next, /api/previous, /api/mute)"
     }
   },
   "x-websocket-events": {
@@ -529,6 +757,35 @@
       "control-exitfullscreen": {
         "direction": "server-to-client",
         "description": "Broadcast when /api/exitfullscreen endpoint is called",
+        "payload": null
+      },
+      "control-volume": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/volume endpoint is called",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "description": "Volume level (0-100)",
+              "example": 50
+            }
+          }
+        }
+      },
+      "control-next": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/next endpoint is called",
+        "payload": null
+      },
+      "control-previous": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/previous endpoint is called",
+        "payload": null
+      },
+      "control-mute": {
+        "direction": "server-to-client",
+        "description": "Broadcast when /api/mute endpoint is called",
         "payload": null
       },
       "connect": {

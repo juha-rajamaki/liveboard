@@ -167,6 +167,9 @@ function requireApiKey(req, res, next) {
     timestamp: new Date().toISOString()
   });
 
+  // Update API client activity
+  updateApiActivity();
+
   next();
 }
 
@@ -211,7 +214,7 @@ app.use((req, res, next) => {
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' https://www.youtube.com https://cdn.socket.io https://cdn.jsdelivr.net",
       "frame-src 'self' https://www.youtube.com",
-      "connect-src 'self' ws://localhost:1212 wss://localhost:1212 https://www.youtube.com",
+      "connect-src 'self' ws://localhost:1212 wss://localhost:1212 https://www.youtube.com https://i.ytimg.com",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' https: data:",
       "font-src 'self' data:",
@@ -230,7 +233,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static('public'));
+// Disable caching for static files
+app.use(express.static('public', {
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 // Rate limiting for API endpoints
 const apiLimiter = rateLimit({
@@ -256,13 +266,63 @@ const playLimiter = rateLimit({
 // Apply rate limiting to API routes
 app.use('/api/', apiLimiter);
 
-// Store connected clients
-let connectedClients = 0;
+// Store connected clients with their info
+let connectedClients = [];
+let connectedClientsCount = 0;
+
+// Track API client activity
+let lastApiActivity = null;
+let apiClientActive = false;
+const API_TIMEOUT = 60000; // 60 seconds
+
+// Track dashboard state
+let dashboardState = {
+  volume: 100,  // Default volume
+  playbackStatus: 'stopped',  // playing, paused, stopped
+  currentVideoTitle: 'No video loaded'  // Current video title
+};
+
+// Function to update API client activity
+function updateApiActivity() {
+  lastApiActivity = Date.now();
+  if (!apiClientActive) {
+    apiClientActive = true;
+    io.emit('api-client-status', { active: true });
+    console.log('API client is now active');
+  }
+}
+
+// Check for API client inactivity
+setInterval(() => {
+  if (apiClientActive && lastApiActivity) {
+    const timeSinceLastActivity = Date.now() - lastApiActivity;
+    if (timeSinceLastActivity > API_TIMEOUT) {
+      apiClientActive = false;
+      io.emit('api-client-status', { active: false });
+      console.log('API client became inactive');
+    }
+  }
+}, 10000); // Check every 10 seconds
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
-  connectedClients++;
-  console.log(`New client connected. Total clients: ${connectedClients}`);
+  connectedClientsCount++;
+
+  // Add client to the list with unknown name initially
+  const clientInfo = {
+    id: socket.id,
+    name: 'Unknown Device',
+    connectedAt: new Date().toISOString()
+  };
+  connectedClients.push(clientInfo);
+
+  console.log(`New client connected. Total clients: ${connectedClientsCount}`);
+
+  // Send current API client status to newly connected client
+  socket.emit('api-client-status', { active: apiClientActive });
+
+  // Send current connected clients list to all clients
+  io.emit('connected-clients', { clients: connectedClients });
 
   // Handle control discovery messages
   socket.on('message', (data) => {
@@ -272,9 +332,14 @@ io.on('connection', (socket) => {
       if (message.type === 'get_controls') {
         console.log('Control discovery request received');
 
-        // Send control definitions
+        // Update API client activity
+        updateApiActivity();
+
+        // Send control definitions with current state
         const controlsResponse = {
           type: 'controls',
+          playbackStatus: dashboardState.playbackStatus,
+          currentVideoTitle: dashboardState.currentVideoTitle,
           controls: [
             {
               id: 'play',
@@ -283,6 +348,16 @@ io.on('connection', (socket) => {
               command: 'play',
               placeholder: 'Enter YouTube URL',
               description: 'Play a YouTube video by URL'
+            },
+            {
+              id: 'volume',
+              name: 'Volume',
+              type: 'slider',
+              command: 'volume',
+              min: 0,
+              max: 100,
+              value: dashboardState.volume,
+              description: 'Adjust volume (0-100)'
             },
             {
               id: 'pause',
@@ -306,6 +381,27 @@ io.on('connection', (socket) => {
               description: 'Stop video and clear player'
             },
             {
+              id: 'seek-back',
+              name: 'Seek Back 10s',
+              type: 'button',
+              command: 'seek-back',
+              description: 'Seek backward 10 seconds'
+            },
+            {
+              id: 'seek-forward',
+              name: 'Seek Forward 10s',
+              type: 'button',
+              command: 'seek-forward',
+              description: 'Seek forward 10 seconds'
+            },
+            {
+              id: 'theater',
+              name: 'Theater mode / Default view',
+              type: 'button',
+              command: 'theater',
+              description: 'Toggle theater mode / default view'
+            },
+            {
               id: 'fullscreen',
               name: 'Fullscreen',
               type: 'button',
@@ -318,6 +414,27 @@ io.on('connection', (socket) => {
               type: 'button',
               command: 'exitfullscreen',
               description: 'Exit fullscreen mode'
+            },
+            {
+              id: 'next',
+              name: 'Next',
+              type: 'button',
+              command: 'next',
+              description: 'Play next video in playlist'
+            },
+            {
+              id: 'previous',
+              name: 'Previous',
+              type: 'button',
+              command: 'previous',
+              description: 'Play previous video in playlist'
+            },
+            {
+              id: 'mute',
+              name: 'Mute/Unmute',
+              type: 'button',
+              command: 'mute',
+              description: 'Toggle mute'
             }
           ]
         };
@@ -326,9 +443,73 @@ io.on('connection', (socket) => {
         console.log('Control definitions sent');
       }
 
+      // Handle device identification
+      if (message.type === 'identify') {
+        const deviceName = message.name || 'Unknown Device';
+        const client = connectedClients.find(c => c.id === socket.id);
+        if (client) {
+          client.name = deviceName;
+          console.log(`Client ${socket.id} identified as: ${deviceName}`);
+          // Broadcast updated client list to all clients
+          io.emit('connected-clients', { clients: connectedClients });
+          // Notify all OTHER clients about the new connection
+          socket.broadcast.emit('client-connected', {
+            name: deviceName,
+            id: socket.id,
+            connectedAt: client.connectedAt
+          });
+        }
+      }
+
+      // Handle volume updates from dashboard
+      if (message.type === 'volume_update') {
+        if (typeof message.value === 'number' && message.value >= 0 && message.value <= 100) {
+          dashboardState.volume = message.value;
+          console.log('Dashboard volume updated to:', message.value);
+
+          // Broadcast volume change to all connected clients
+          io.emit('state-volume-changed', {
+            volume: message.value,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
+      // Handle playback status updates from dashboard
+      if (message.type === 'status_update') {
+        const validStatuses = ['playing', 'paused', 'stopped'];
+        if (validStatuses.includes(message.status)) {
+          dashboardState.playbackStatus = message.status;
+          console.log('Dashboard playback status updated to:', message.status);
+
+          // Broadcast playback status change to all connected clients
+          io.emit('state-playback-changed', {
+            status: message.status,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
+      // Handle video title updates from dashboard
+      if (message.type === 'title_update') {
+        if (typeof message.title === 'string') {
+          dashboardState.currentVideoTitle = message.title;
+          console.log('Dashboard video title updated to:', message.title);
+
+          // Broadcast title change to all connected clients
+          io.emit('state-title-changed', {
+            title: message.title,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
       // Handle control commands
       if (message.type === 'command') {
         console.log(`Command received: ${message.command}`, message.value);
+
+        // Update API client activity
+        updateApiActivity();
 
         switch (message.command) {
           case 'play':
@@ -365,6 +546,46 @@ io.on('connection', (socket) => {
             console.log('Exiting fullscreen');
             break;
 
+          case 'volume':
+            if (typeof message.value === 'number' && message.value >= 0 && message.value <= 100) {
+              dashboardState.volume = message.value;
+              io.emit('control-volume', { level: message.value });
+              console.log('Setting volume to:', message.value);
+            } else {
+              console.warn('Invalid volume value:', message.value);
+            }
+            break;
+
+          case 'next':
+            io.emit('control-next');
+            console.log('Playing next video in playlist');
+            break;
+
+          case 'previous':
+            io.emit('control-previous');
+            console.log('Playing previous video in playlist');
+            break;
+
+          case 'mute':
+            io.emit('control-mute');
+            console.log('Toggling mute');
+            break;
+
+          case 'seek-back':
+            io.emit('control-seek-back');
+            console.log('Seeking backward 10 seconds');
+            break;
+
+          case 'seek-forward':
+            io.emit('control-seek-forward');
+            console.log('Seeking forward 10 seconds');
+            break;
+
+          case 'theater':
+            io.emit('control-theater');
+            console.log('Toggling theater mode');
+            break;
+
           default:
             console.warn(`Unknown command: ${message.command}`);
         }
@@ -375,8 +596,19 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    connectedClients--;
-    console.log(`Client disconnected. Total clients: ${connectedClients}`);
+    connectedClientsCount--;
+
+    // Remove client from the list
+    const clientIndex = connectedClients.findIndex(c => c.id === socket.id);
+    if (clientIndex !== -1) {
+      const removedClient = connectedClients.splice(clientIndex, 1)[0];
+      console.log(`Client disconnected: ${removedClient.name}. Total clients: ${connectedClientsCount}`);
+
+      // Broadcast updated client list to all remaining clients
+      io.emit('connected-clients', { clients: connectedClients });
+    } else {
+      console.log(`Client disconnected. Total clients: ${connectedClientsCount}`);
+    }
   });
 });
 
@@ -416,7 +648,47 @@ app.post('/api/play', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Video URL sent to dashboard',
-    clients: connectedClients
+    clientCount: connectedClients.length
+  });
+});
+
+// Play now endpoint - plays video immediately (adds to top of playlist and plays)
+app.post('/api/play-now', requireApiKey, playLimiter, (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: 'URL is required'
+    });
+  }
+
+  // Validate URL format
+  if (!isValidYouTubeUrl(url)) {
+    console.warn(`Invalid URL rejected: ${url.substring(0, 50)}`);
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid YouTube URL format'
+    });
+  }
+
+  // Additional length check
+  if (url.length > 500) {
+    return res.status(400).json({
+      success: false,
+      error: 'URL too long'
+    });
+  }
+
+  console.log(`Received valid URL for immediate playback: ${url}`);
+
+  // Broadcast the URL to all connected clients for immediate playback
+  io.emit('play-video-now', { url });
+
+  res.json({
+    success: true,
+    message: 'Video sent to dashboard for immediate playback',
+    clientCount: connectedClients.length
   });
 });
 
@@ -427,7 +699,7 @@ app.post('/api/pause', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Pause command sent to all dashboards',
-    clients: connectedClients
+    clientCount: connectedClients.length
   });
 });
 
@@ -438,7 +710,7 @@ app.post('/api/resume', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Resume command sent to all dashboards',
-    clients: connectedClients
+    clientCount: connectedClients.length
   });
 });
 
@@ -449,7 +721,7 @@ app.post('/api/stop', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Stop command sent to all dashboards',
-    clients: connectedClients
+    clientCount: connectedClients.length
   });
 });
 
@@ -460,7 +732,7 @@ app.post('/api/fullscreen', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Fullscreen command sent to all dashboards',
-    clients: connectedClients
+    clientCount: connectedClients.length
   });
 });
 
@@ -471,7 +743,160 @@ app.post('/api/exitfullscreen', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Exit fullscreen command sent to all dashboards',
-    clients: connectedClients
+    clientCount: connectedClients.length
+  });
+});
+
+// Volume control endpoint
+app.post('/api/volume', requireApiKey, playLimiter, (req, res) => {
+  const { level } = req.body;
+
+  // Validate volume level
+  if (typeof level !== 'number' || level < 0 || level > 100) {
+    return res.status(400).json({
+      success: false,
+      error: 'Volume level must be a number between 0 and 100'
+    });
+  }
+
+  console.log('Volume control command received:', level);
+  dashboardState.volume = level;
+  io.emit('control-volume', { level });
+  res.json({
+    success: true,
+    message: 'Volume command sent to all dashboards',
+    level,
+    clientCount: connectedClients.length
+  });
+});
+
+// Play next video in playlist endpoint
+app.post('/api/next', requireApiKey, playLimiter, (req, res) => {
+  console.log('Play next command received');
+  io.emit('control-next');
+  res.json({
+    success: true,
+    message: 'Play next command sent to all dashboards',
+    clientCount: connectedClients.length
+  });
+});
+
+// Play previous video in playlist endpoint
+app.post('/api/previous', requireApiKey, playLimiter, (req, res) => {
+  console.log('Play previous command received');
+  io.emit('control-previous');
+  res.json({
+    success: true,
+    message: 'Play previous command sent to all dashboards',
+    clientCount: connectedClients.length
+  });
+});
+
+// Mute/unmute endpoint
+app.post('/api/mute', requireApiKey, playLimiter, (req, res) => {
+  console.log('Mute/unmute command received');
+  io.emit('control-mute');
+  res.json({
+    success: true,
+    message: 'Mute/unmute command sent to all dashboards',
+    clientCount: connectedClients.length
+  });
+});
+
+// Theater mode toggle endpoint
+app.post('/api/theater', requireApiKey, playLimiter, (req, res) => {
+  console.log('Theater mode toggle command received');
+  io.emit('control-theater');
+  res.json({
+    success: true,
+    message: 'Theater mode toggle command sent to all dashboards',
+    clientCount: connectedClients.length
+  });
+});
+
+// Seek backward endpoint
+app.post('/api/seek-backward', requireApiKey, playLimiter, (req, res) => {
+  // Validate that body is empty or only contains expected properties
+  if (req.body && Object.keys(req.body).length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'This endpoint does not accept request body parameters'
+    });
+  }
+
+  // Check if any clients are connected
+  if (connectedClients.length === 0) {
+    return res.status(503).json({
+      success: false,
+      error: 'No clients connected to receive the command'
+    });
+  }
+
+  console.log('Seek backward command received');
+
+  try {
+    io.emit('control-seek-back');
+    res.json({
+      success: true,
+      message: 'Seek backward command sent to all dashboards',
+      clientCount: connectedClients.length
+    });
+  } catch (error) {
+    console.error('Failed to emit seek backward command:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to broadcast command to clients'
+    });
+  }
+});
+
+// Seek forward endpoint
+app.post('/api/seek-forward', requireApiKey, playLimiter, (req, res) => {
+  // Validate that body is empty or only contains expected properties
+  if (req.body && Object.keys(req.body).length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'This endpoint does not accept request body parameters'
+    });
+  }
+
+  // Check if any clients are connected
+  if (connectedClients.length === 0) {
+    return res.status(503).json({
+      success: false,
+      error: 'No clients connected to receive the command'
+    });
+  }
+
+  console.log('Seek forward command received');
+
+  try {
+    io.emit('control-seek-forward');
+    res.json({
+      success: true,
+      message: 'Seek forward command sent to all dashboards',
+      clientCount: connectedClients.length
+    });
+  } catch (error) {
+    console.error('Failed to emit seek forward command:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to broadcast command to clients'
+    });
+  }
+});
+
+// Get current state endpoint
+app.get('/api/state', requireApiKey, (req, res) => {
+  console.log('State request received');
+  res.json({
+    success: true,
+    state: {
+      volume: dashboardState.volume,
+      playbackStatus: dashboardState.playbackStatus,
+      currentVideoTitle: dashboardState.currentVideoTitle
+    },
+    timestamp: new Date().toISOString()
   });
 });
 
