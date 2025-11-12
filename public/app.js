@@ -584,6 +584,8 @@ async function addToPlaylist(url, title = null, addToTop = false) {
 
     if (existingIndex !== -1) {
         console.log('Video already in playlist');
+        const existingTitle = playlist[existingIndex].title || 'This video';
+        showToast('Already in Playlist', existingTitle + ' is already in your playlist', 'info', 3000);
         return existingIndex; // Return the existing index
     }
 
@@ -631,6 +633,9 @@ async function addToPlaylist(url, title = null, addToTop = false) {
     renderPlaylist();
 
     console.log('Added to playlist:', metadata.title, addToTop ? '(at top)' : '(at end)');
+
+    // Show toast notification
+    showToast('Added to Playlist', metadata.title, 'success', 3000);
 
     // Fetch full metadata in background
     if (!title) {
