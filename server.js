@@ -375,6 +375,13 @@ io.on('connection', (socket) => {
               description: 'Adjust volume (0-100)'
             },
             {
+              id: 'previous',
+              name: 'Previous',
+              type: 'button',
+              command: 'previous',
+              description: 'Play previous video in playlist'
+            },
+            {
               id: 'play-pause',
               name: 'Play/Pause',
               type: 'button',
@@ -382,11 +389,25 @@ io.on('connection', (socket) => {
               description: 'Toggle play/pause'
             },
             {
+              id: 'next',
+              name: 'Next',
+              type: 'button',
+              command: 'next',
+              description: 'Play next video in playlist'
+            },
+            {
               id: 'stop',
               name: 'Stop',
               type: 'button',
               command: 'stop',
               description: 'Stop video and clear player'
+            },
+            {
+              id: 'mute',
+              name: 'Mute/Unmute',
+              type: 'button',
+              command: 'mute',
+              description: 'Toggle mute'
             },
             {
               id: 'seek-back',
@@ -415,27 +436,6 @@ io.on('connection', (socket) => {
               type: 'button',
               command: 'fullscreen',
               description: 'Toggle fullscreen mode'
-            },
-            {
-              id: 'next',
-              name: 'Next',
-              type: 'button',
-              command: 'next',
-              description: 'Play next video in playlist'
-            },
-            {
-              id: 'previous',
-              name: 'Previous',
-              type: 'button',
-              command: 'previous',
-              description: 'Play previous video in playlist'
-            },
-            {
-              id: 'mute',
-              name: 'Mute/Unmute',
-              type: 'button',
-              command: 'mute',
-              description: 'Toggle mute'
             }
           ]
         };
