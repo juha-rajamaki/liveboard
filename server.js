@@ -270,6 +270,11 @@ app.use('/api/', apiLimiter);
 let connectedClients = [];
 let connectedClientsCount = 0;
 
+// Helper function to get only external clients (excluding dashboards)
+function getExternalClients() {
+  return connectedClients.filter(c => c.type === 'external');
+}
+
 // Track API client activity
 let lastApiActivity = null;
 let apiClientActive = false;
@@ -312,17 +317,19 @@ io.on('connection', (socket) => {
   const clientInfo = {
     id: socket.id,
     name: 'Unknown Device',
+    type: 'external', // 'dashboard' or 'external'
+    ipAddress: socket.handshake.address,
     connectedAt: new Date().toISOString()
   };
   connectedClients.push(clientInfo);
 
-  console.log(`New client connected. Total clients: ${connectedClientsCount}`);
+  console.log(`New client connected from ${socket.handshake.address}. ID: ${socket.id}. Total clients: ${connectedClientsCount}`);
 
   // Send current API client status to newly connected client
   socket.emit('api-client-status', { active: apiClientActive });
 
-  // Send current connected clients list to all clients
-  io.emit('connected-clients', { clients: connectedClients });
+  // Send current connected clients list to all clients (filtered to external only)
+  io.emit('connected-clients', { clients: getExternalClients() });
 
   // Handle control discovery messages
   socket.on('message', (data) => {
@@ -457,15 +464,21 @@ io.on('connection', (socket) => {
         const client = connectedClients.find(c => c.id === socket.id);
         if (client) {
           client.name = deviceName;
-          console.log(`Client ${socket.id} identified as: ${deviceName}`);
-          // Broadcast updated client list to all clients
-          io.emit('connected-clients', { clients: connectedClients });
-          // Notify all OTHER clients about the new connection
-          socket.broadcast.emit('client-connected', {
-            deviceName: deviceName,
-            id: socket.id,
-            connectedAt: client.connectedAt
-          });
+          // Determine client type based on name
+          client.type = deviceName.startsWith('Dashboard') ? 'dashboard' : 'external';
+          console.log(`Client ${socket.id} identified as: ${deviceName} (${client.type})`);
+
+          // Broadcast updated client list to all clients (filtered to external only)
+          io.emit('connected-clients', { clients: getExternalClients() });
+
+          // Notify all OTHER clients about the new connection (only if external)
+          if (client.type === 'external') {
+            socket.broadcast.emit('client-connected', {
+              deviceName: deviceName,
+              id: socket.id,
+              connectedAt: client.connectedAt
+            });
+          }
         }
       }
 
@@ -619,10 +632,11 @@ io.on('connection', (socket) => {
     const clientIndex = connectedClients.findIndex(c => c.id === socket.id);
     if (clientIndex !== -1) {
       const removedClient = connectedClients.splice(clientIndex, 1)[0];
-      console.log(`Client disconnected: ${removedClient.name}. Total clients: ${connectedClientsCount}`);
+      const duration = Math.round((Date.now() - new Date(removedClient.connectedAt).getTime()) / 1000);
+      console.log(`Client disconnected: ${removedClient.name} (${removedClient.type}) from ${removedClient.ipAddress}. ID: ${removedClient.id}. Duration: ${duration}s. Total clients: ${connectedClientsCount}`);
 
-      // Broadcast updated client list to all remaining clients
-      io.emit('connected-clients', { clients: connectedClients });
+      // Broadcast updated client list to all remaining clients (filtered to external only)
+      io.emit('connected-clients', { clients: getExternalClients() });
     } else {
       console.log(`Client disconnected. Total clients: ${connectedClientsCount}`);
     }
@@ -665,7 +679,7 @@ app.post('/api/play', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Video URL sent to dashboard',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -705,7 +719,7 @@ app.post('/api/play-now', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Video sent to dashboard for immediate playback',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -716,7 +730,7 @@ app.post('/api/pause', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Pause command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -727,7 +741,7 @@ app.post('/api/resume', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Resume command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -738,7 +752,7 @@ app.post('/api/stop', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Stop command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -749,7 +763,7 @@ app.post('/api/fullscreen', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Fullscreen command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -760,7 +774,7 @@ app.post('/api/exitfullscreen', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Exit fullscreen command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -783,7 +797,7 @@ app.post('/api/volume', requireApiKey, playLimiter, (req, res) => {
     success: true,
     message: 'Volume command sent to all dashboards',
     level,
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -794,7 +808,7 @@ app.post('/api/next', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Play next command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -805,7 +819,7 @@ app.post('/api/previous', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Play previous command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -816,7 +830,7 @@ app.post('/api/mute', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Mute/unmute command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -827,7 +841,7 @@ app.post('/api/theater', requireApiKey, playLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'Theater mode toggle command sent to all dashboards',
-    clientCount: connectedClients.length
+    clientCount: getExternalClients().length
   });
 });
 
@@ -842,7 +856,7 @@ app.post('/api/seek-backward', requireApiKey, playLimiter, (req, res) => {
   }
 
   // Check if any clients are connected
-  if (connectedClients.length === 0) {
+  if (getExternalClients().length === 0) {
     return res.status(503).json({
       success: false,
       error: 'No clients connected to receive the command'
@@ -856,7 +870,7 @@ app.post('/api/seek-backward', requireApiKey, playLimiter, (req, res) => {
     res.json({
       success: true,
       message: 'Seek backward command sent to all dashboards',
-      clientCount: connectedClients.length
+      clientCount: getExternalClients().length
     });
   } catch (error) {
     console.error('Failed to emit seek backward command:', error);
@@ -878,7 +892,7 @@ app.post('/api/seek-forward', requireApiKey, playLimiter, (req, res) => {
   }
 
   // Check if any clients are connected
-  if (connectedClients.length === 0) {
+  if (getExternalClients().length === 0) {
     return res.status(503).json({
       success: false,
       error: 'No clients connected to receive the command'
@@ -892,7 +906,7 @@ app.post('/api/seek-forward', requireApiKey, playLimiter, (req, res) => {
     res.json({
       success: true,
       message: 'Seek forward command sent to all dashboards',
-      clientCount: connectedClients.length
+      clientCount: getExternalClients().length
     });
   } catch (error) {
     console.error('Failed to emit seek forward command:', error);
@@ -921,7 +935,25 @@ app.get('/api/state', requireApiKey, (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    connectedClients
+    connectedClients: getExternalClients()
+  });
+});
+
+// Debug endpoint to see all connected clients (including dashboards)
+app.get('/api/debug/clients', (req, res) => {
+  res.json({
+    success: true,
+    totalClients: connectedClients.length,
+    externalClients: getExternalClients().length,
+    dashboardClients: connectedClients.filter(c => c.type === 'dashboard').length,
+    clients: connectedClients.map(c => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      ipAddress: c.ipAddress,
+      connectedAt: c.connectedAt,
+      duration: Math.round((Date.now() - new Date(c.connectedAt).getTime()) / 1000) + 's'
+    }))
   });
 });
 
