@@ -75,8 +75,7 @@ const historyList = document.getElementById('historyList');
 const clearHistoryBtn = document.getElementById('clearHistory');
 const playlistList = document.getElementById('playlistList');
 const clearPlaylistBtn = document.getElementById('clearPlaylist');
-const pauseBtn = document.getElementById('pauseBtn');
-const playBtn = document.getElementById('playBtn');
+const playPauseBtn = document.getElementById('playPauseBtn');
 const stopBtn = document.getElementById('stopBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const previousBtn = document.getElementById('previousBtn');
@@ -156,6 +155,17 @@ function onPlayerStateChange(event) {
         socket.emit('message', JSON.stringify({ type: 'status_update', status: 'paused' }));
     } else if (event.data === YT.PlayerState.ENDED) {
         socket.emit('message', JSON.stringify({ type: 'status_update', status: 'stopped' }));
+    }
+
+    // Update play/pause button icon based on player state
+    if (playPauseBtn) {
+        if (event.data === YT.PlayerState.PLAYING) {
+            playPauseBtn.classList.remove('paused');
+            playPauseBtn.classList.add('playing');
+        } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+            playPauseBtn.classList.remove('playing');
+            playPauseBtn.classList.add('paused');
+        }
     }
 
     // Auto-play next video when current video ends
@@ -1282,19 +1292,9 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 document.addEventListener('msfullscreenchange', updateFullscreenButton);
 
 // Video control buttons
-if (pauseBtn) {
-    pauseBtn.addEventListener('click', () => {
-        if (player && isPlayerReady) {
-            player.pauseVideo();
-            console.log('Video paused');
-        }
-    });
-}
-
-if (playBtn) {
-    playBtn.addEventListener('click', () => {
-        console.log('Play button clicked');
-        console.log('Player state:', { player: !!player, isPlayerReady });
+if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+        console.log('Play/Pause button clicked');
 
         if (!player) {
             console.error('Player not initialized');
@@ -1309,10 +1309,20 @@ if (playBtn) {
         try {
             const currentState = player.getPlayerState();
             console.log('Current player state:', currentState);
-            player.playVideo();
-            console.log('Video resumed');
+
+            if (currentState === YT.PlayerState.PLAYING) {
+                player.pauseVideo();
+                playPauseBtn.classList.remove('playing');
+                playPauseBtn.classList.add('paused');
+                console.log('Video paused');
+            } else {
+                player.playVideo();
+                playPauseBtn.classList.remove('paused');
+                playPauseBtn.classList.add('playing');
+                console.log('Video playing');
+            }
         } catch (error) {
-            console.error('Error playing video:', error);
+            console.error('Error toggling play/pause:', error);
         }
     });
 }

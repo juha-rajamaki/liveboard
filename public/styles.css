@@ -581,6 +581,20 @@ main {
     flex-shrink: 0;
 }
 
+/* Play/Pause button icon toggle */
+.control-btn .play-icon,
+.control-btn .pause-icon {
+    display: none;
+}
+
+.control-btn.paused .play-icon {
+    display: block;
+}
+
+.control-btn.playing .pause-icon {
+    display: block;
+}
+
 /* Volume Control */
 .volume-control {
     display: flex;
