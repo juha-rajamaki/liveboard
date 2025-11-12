@@ -375,18 +375,11 @@ io.on('connection', (socket) => {
               description: 'Adjust volume (0-100)'
             },
             {
-              id: 'pause',
-              name: 'Pause',
+              id: 'play-pause',
+              name: 'Play/Pause',
               type: 'button',
-              command: 'pause',
-              description: 'Pause current video'
-            },
-            {
-              id: 'resume',
-              name: 'Resume',
-              type: 'button',
-              command: 'resume',
-              description: 'Resume playback'
+              command: 'play-pause',
+              description: 'Toggle play/pause'
             },
             {
               id: 'stop',
@@ -418,17 +411,10 @@ io.on('connection', (socket) => {
             },
             {
               id: 'fullscreen',
-              name: 'Fullscreen',
+              name: 'Toggle Fullscreen',
               type: 'button',
               command: 'fullscreen',
-              description: 'Enter fullscreen mode'
-            },
-            {
-              id: 'exitfullscreen',
-              name: 'Exit Fullscreen',
-              type: 'button',
-              command: 'exitfullscreen',
-              description: 'Exit fullscreen mode'
+              description: 'Toggle fullscreen mode'
             },
             {
               id: 'next',
@@ -551,14 +537,20 @@ io.on('connection', (socket) => {
             }
             break;
 
+          case 'play-pause':
+            io.emit('control-play-pause');
+            console.log('Toggling play/pause');
+            break;
+
+          // Deprecated: kept for backward compatibility
           case 'pause':
-            io.emit('control-pause');
-            console.log('Pausing video');
+            io.emit('control-play-pause');
+            console.log('Toggling play/pause (via deprecated pause)');
             break;
 
           case 'resume':
-            io.emit('control-resume');
-            console.log('Resuming video');
+            io.emit('control-play-pause');
+            console.log('Toggling play/pause (via deprecated resume)');
             break;
 
           case 'stop':
@@ -568,12 +560,13 @@ io.on('connection', (socket) => {
 
           case 'fullscreen':
             io.emit('control-fullscreen');
-            console.log('Entering fullscreen');
+            console.log('Toggling fullscreen');
             break;
 
+          // Deprecated: kept for backward compatibility
           case 'exitfullscreen':
-            io.emit('control-exitfullscreen');
-            console.log('Exiting fullscreen');
+            io.emit('control-fullscreen');
+            console.log('Toggling fullscreen (via deprecated exitfullscreen)');
             break;
 
           case 'volume':
@@ -723,25 +716,29 @@ app.post('/api/play-now', requireApiKey, playLimiter, (req, res) => {
   });
 });
 
-// Pause video endpoint
+// Deprecated: Pause video endpoint (now toggles play/pause for backward compatibility)
 app.post('/api/pause', requireApiKey, playLimiter, (req, res) => {
-  console.log('Pause command received');
-  io.emit('control-pause');
+  console.log('Toggle play/pause command received (via deprecated /api/pause)');
+  io.emit('control-play-pause');
   res.json({
     success: true,
-    message: 'Pause command sent to all dashboards',
-    clientCount: getExternalClients().length
+    message: 'Toggle play/pause command sent to all dashboards',
+    clientCount: getExternalClients().length,
+    deprecated: true,
+    deprecationMessage: 'This endpoint is deprecated. The server now uses a toggle for play/pause.'
   });
 });
 
-// Resume/Play video endpoint
+// Deprecated: Resume/Play video endpoint (now toggles play/pause for backward compatibility)
 app.post('/api/resume', requireApiKey, playLimiter, (req, res) => {
-  console.log('Resume command received');
-  io.emit('control-resume');
+  console.log('Toggle play/pause command received (via deprecated /api/resume)');
+  io.emit('control-play-pause');
   res.json({
     success: true,
-    message: 'Resume command sent to all dashboards',
-    clientCount: getExternalClients().length
+    message: 'Toggle play/pause command sent to all dashboards',
+    clientCount: getExternalClients().length,
+    deprecated: true,
+    deprecationMessage: 'This endpoint is deprecated. The server now uses a toggle for play/pause.'
   });
 });
 
@@ -756,25 +753,27 @@ app.post('/api/stop', requireApiKey, playLimiter, (req, res) => {
   });
 });
 
-// Fullscreen endpoint
+// Toggle fullscreen endpoint
 app.post('/api/fullscreen', requireApiKey, playLimiter, (req, res) => {
-  console.log('Fullscreen command received');
+  console.log('Toggle fullscreen command received');
   io.emit('control-fullscreen');
   res.json({
     success: true,
-    message: 'Fullscreen command sent to all dashboards',
+    message: 'Toggle fullscreen command sent to all dashboards',
     clientCount: getExternalClients().length
   });
 });
 
-// Exit fullscreen endpoint
+// Deprecated: Exit fullscreen endpoint (now toggles fullscreen for backward compatibility)
 app.post('/api/exitfullscreen', requireApiKey, playLimiter, (req, res) => {
-  console.log('Exit fullscreen command received');
-  io.emit('control-exitfullscreen');
+  console.log('Toggle fullscreen command received (via deprecated /api/exitfullscreen)');
+  io.emit('control-fullscreen');
   res.json({
     success: true,
-    message: 'Exit fullscreen command sent to all dashboards',
-    clientCount: getExternalClients().length
+    message: 'Toggle fullscreen command sent to all dashboards',
+    clientCount: getExternalClients().length,
+    deprecated: true,
+    deprecationMessage: 'This endpoint is deprecated. Use /api/fullscreen instead, which now toggles fullscreen mode.'
   });
 });
 

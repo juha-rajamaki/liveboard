@@ -556,13 +556,13 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     padding: 0;
     background: #667eea;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
 }

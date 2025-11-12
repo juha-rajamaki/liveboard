@@ -941,16 +941,8 @@ socket.on('play-video-now', (data) => {
 });
 
 // Control event handlers from API
-socket.on('control-pause', () => {
-    console.log('Received pause command from API');
-    if (player && isPlayerReady) {
-        player.pauseVideo();
-    }
-});
-
-socket.on('control-resume', () => {
-    console.log('Received resume command from API');
-    console.log('Player state:', { player: !!player, isPlayerReady, hasGetPlayerState: !!(player && player.getPlayerState) });
+socket.on('control-play-pause', () => {
+    console.log('Received play/pause toggle command from API');
 
     if (!player) {
         console.error('Player not initialized');
@@ -966,18 +958,53 @@ socket.on('control-resume', () => {
         const currentState = player.getPlayerState();
         console.log('Current player state:', currentState);
 
-        // If no video is loaded (UNSTARTED or CUED) and we have a selected playlist item, play it
-        if ((currentState === -1 || currentState === YT.PlayerState.UNSTARTED || currentState === YT.PlayerState.CUED)
+        // If playing, pause. Otherwise, play/resume
+        if (currentState === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+            console.log('Paused video');
+        } else if ((currentState === -1 || currentState === YT.PlayerState.UNSTARTED || currentState === YT.PlayerState.CUED)
             && currentPlaylistIndex >= 0 && currentPlaylistIndex < playlist.length) {
+            // No video loaded and we have a playlist - play selected item
             console.log('No video loaded, playing selected playlist item at index:', currentPlaylistIndex);
             playFromPlaylist(currentPlaylistIndex);
         } else {
-            // Otherwise just resume the current video
+            // Resume/play the current video
             player.playVideo();
-            console.log('playVideo() called successfully');
+            console.log('Playing/resuming video');
         }
     } catch (error) {
-        console.error('Error playing video:', error);
+        console.error('Error toggling play/pause:', error);
+    }
+});
+
+// Deprecated: kept for backward compatibility
+socket.on('control-pause', () => {
+    console.log('Received pause command from API (deprecated, using toggle)');
+    // Trigger play-pause toggle
+    if (player && isPlayerReady) {
+        try {
+            const currentState = player.getPlayerState();
+            if (currentState === YT.PlayerState.PLAYING) {
+                player.pauseVideo();
+            }
+        } catch (error) {
+            console.error('Error in deprecated pause handler:', error);
+        }
+    }
+});
+
+socket.on('control-resume', () => {
+    console.log('Received resume command from API (deprecated, using toggle)');
+    // Trigger play-pause toggle
+    if (player && isPlayerReady) {
+        try {
+            const currentState = player.getPlayerState();
+            if (currentState !== YT.PlayerState.PLAYING) {
+                player.playVideo();
+            }
+        } catch (error) {
+            console.error('Error in deprecated resume handler:', error);
+        }
     }
 });
 
@@ -991,24 +1018,39 @@ socket.on('control-stop', () => {
 });
 
 socket.on('control-fullscreen', () => {
-    console.log('Received fullscreen command from API');
+    console.log('Received toggle fullscreen command from API');
 
-    // Use CSS-based "fake fullscreen" (workaround for browser security restrictions)
+    // Toggle CSS-based "fake fullscreen" (workaround for browser security restrictions)
     if (videoContainer) {
-        videoContainer.classList.add('fake-fullscreen');
-        document.body.classList.add('fake-fullscreen-active');
-        console.log('Entered fake fullscreen mode');
+        const isFullscreen = videoContainer.classList.contains('fake-fullscreen');
+        if (isFullscreen) {
+            videoContainer.classList.remove('fake-fullscreen');
+            document.body.classList.remove('fake-fullscreen-active');
+            console.log('Exited fake fullscreen mode');
+        } else {
+            videoContainer.classList.add('fake-fullscreen');
+            document.body.classList.add('fake-fullscreen-active');
+            console.log('Entered fake fullscreen mode');
+        }
     }
 });
 
+// Deprecated: kept for backward compatibility
 socket.on('control-exitfullscreen', () => {
-    console.log('Received exit fullscreen command from API');
+    console.log('Received toggle fullscreen command from API (via deprecated control-exitfullscreen)');
 
-    // Exit CSS-based fake fullscreen
+    // Toggle fullscreen (same as control-fullscreen)
     if (videoContainer) {
-        videoContainer.classList.remove('fake-fullscreen');
-        document.body.classList.remove('fake-fullscreen-active');
-        console.log('Exited fake fullscreen mode');
+        const isFullscreen = videoContainer.classList.contains('fake-fullscreen');
+        if (isFullscreen) {
+            videoContainer.classList.remove('fake-fullscreen');
+            document.body.classList.remove('fake-fullscreen-active');
+            console.log('Exited fake fullscreen mode');
+        } else {
+            videoContainer.classList.add('fake-fullscreen');
+            document.body.classList.add('fake-fullscreen-active');
+            console.log('Entered fake fullscreen mode');
+        }
     }
 });
 
