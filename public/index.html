@@ -83,25 +83,10 @@
                         </div>
                     </div>
 
-                    <div class="url-input-section">
-                        <h3>Add Video</h3>
-                        <div class="input-group">
-                            <input type="text" id="testUrl" placeholder="Enter YouTube URL or Video ID" class="url-input">
-                            <button id="testButton" class="action-btn secondary" title="Add to Playlist">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                Add to Playlist
-                            </button>
-                            <button id="playNowButton" class="action-btn primary" title="Play Now">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                Play Now
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Hidden dummy elements for JavaScript compatibility -->
+                    <input type="hidden" id="testUrl">
+                    <button id="testButton" style="display: none;"></button>
+                    <button id="playNowButton" style="display: none;"></button>
 
                     <div class="video-controls">
                         <button id="previousBtn" class="control-btn" title="Previous">
