@@ -867,6 +867,10 @@ main {
     gap: 20px;
 }
 
+.bottom-panels .current-video {
+    grid-column: 1 / -1;
+}
+
 /* History Panel */
 .history-panel {
     background: white;
@@ -1215,7 +1219,27 @@ body.theater-mode .video-container {
 }
 
 body.theater-mode .current-video {
-    display: none !important;
+    background: #1a1a1a;
+    border: none;
+    border-top: 1px solid #333;
+    border-radius: 0;
+    margin: 0;
+    padding: 15px 40px;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+body.theater-mode .current-video h3 {
+    color: #fff;
+}
+
+body.theater-mode .current-video-content {
+    background: #2a2a2a;
+}
+
+body.theater-mode .current-video #currentUrl {
+    color: #e0e0e0;
 }
 
 body.theater-mode .video-controls {
