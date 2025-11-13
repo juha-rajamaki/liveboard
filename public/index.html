@@ -11,14 +11,6 @@
         <header>
             <h1>Liveboard</h1>
             <div class="header-right">
-                <button class="compact-toggle-btn active" id="toggleSidebar" title="Toggle Info Panels">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                </button>
                 <a href="/documentation" class="doc-link" target="_blank">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -75,6 +67,39 @@
                                 </div>
                                 <p>Waiting for video URL...</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="current-video">
+                        <h3>Currently Playing</h3>
+                        <div class="current-video-content">
+                            <span id="currentUrl" data-url="">No video loaded</span>
+                            <button id="currentUrlIcon" class="url-icon" title="Copy URL" style="display: none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="url-input-section">
+                        <h3>Add Video</h3>
+                        <div class="input-group">
+                            <input type="text" id="testUrl" placeholder="Enter YouTube URL or Video ID" class="url-input">
+                            <button id="testButton" class="action-btn secondary" title="Add to Playlist">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Add to Playlist
+                            </button>
+                            <button id="playNowButton" class="action-btn primary" title="Play Now">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Play Now
+                            </button>
                         </div>
                     </div>
 
@@ -136,6 +161,12 @@
                             <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider" title="Volume">
                             <span id="volumeValue" class="volume-value">100</span>
                         </div>
+                        <button id="toggleYTControls" class="control-btn active" title="Toggle YouTube Player Controls">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
+                                <line x1="7" y1="12" x2="7.01" y2="12"></line>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -145,11 +176,6 @@
                     <div class="playlist-header">
                         <h2>Playlist</h2>
                         <div class="playlist-header-actions">
-                            <button class="toggle-icon" id="togglePlaylist" title="Toggle visibility">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </button>
                             <button id="clearPlaylist" class="clear-btn" title="Clear Playlist">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -167,11 +193,6 @@
                     <div class="history-header">
                         <h2>History</h2>
                         <div class="history-header-actions">
-                            <button class="toggle-icon" id="toggleHistory" title="Toggle visibility">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </button>
                             <button id="clearHistory" class="clear-btn" title="Clear History">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -183,37 +204,6 @@
                         </div>
                     </div>
                     <div id="historyList" class="history-list"></div>
-                </div>
-            </div>
-
-            <div class="sidebar">
-                <div class="info-panel">
-                    <div class="panel-header">
-                        <h2>Current Video</h2>
-                        <button class="toggle-icon" id="toggleCurrentVideo" title="Toggle visibility">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="current-video-info" id="currentVideoContent">
-                        <p id="currentUrl">No video loaded</p>
-                        <button id="currentUrlIcon" class="url-icon" style="display: none;" title="Click to copy URL">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <h2>Add Video</h2>
-                    <div class="test-form">
-                        <input type="text" id="testUrl" placeholder="Enter YouTube URL" />
-                        <div class="button-group">
-                            <button id="playNowButton" class="primary-btn">Play</button>
-                            <button id="testButton" class="secondary-btn">Add to Playlist</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>

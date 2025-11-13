@@ -87,6 +87,11 @@ const volumeSlider = document.getElementById('volumeSlider');
 const volumeValue = document.getElementById('volumeValue');
 const muteBtn = document.getElementById('muteBtn');
 
+// Connected Users Modal elements
+const connectedUsersModal = document.getElementById('connectedUsersModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const connectedUsersList = document.getElementById('connectedUsersList');
+
 // Load YouTube IFrame API
 function loadYouTubeAPI() {
     const tag = document.createElement('script');
@@ -107,7 +112,8 @@ function onYouTubeIframeAPIReady() {
             autoplay: 1,
             controls: showControls ? 1 : 0,
             modestbranding: 1,
-            rel: 0
+            rel: 0,
+            fs: 0
         },
         events: {
             onReady: onPlayerReady,
@@ -1610,59 +1616,6 @@ if (currentUrlIcon) {
     });
 }
 
-// Toggle panel visibility
-function setupToggleButtons() {
-    const toggleCurrentVideo = document.getElementById('toggleCurrentVideo');
-    const toggleHistory = document.getElementById('toggleHistory');
-    const togglePlaylist = document.getElementById('togglePlaylist');
-    const currentVideoContent = document.getElementById('currentVideoContent');
-    const historyList = document.getElementById('historyList');
-    const playlistList = document.getElementById('playlistList');
-
-    if (!toggleCurrentVideo || !toggleHistory || !togglePlaylist) return;
-
-    // Load saved states from localStorage
-    const currentVideoCollapsed = localStorage.getItem('currentVideoCollapsed') === 'true';
-    const historyCollapsed = localStorage.getItem('historyCollapsed') === 'true';
-    const playlistCollapsed = localStorage.getItem('playlistCollapsed') === 'true';
-
-    if (currentVideoCollapsed) {
-        currentVideoContent.classList.add('collapsed');
-        toggleCurrentVideo.classList.add('collapsed');
-    }
-
-    if (historyCollapsed) {
-        historyList.classList.add('collapsed');
-        toggleHistory.classList.add('collapsed');
-    }
-
-    if (playlistCollapsed) {
-        playlistList.classList.add('collapsed');
-        togglePlaylist.classList.add('collapsed');
-    }
-
-    // Toggle current video section
-    toggleCurrentVideo.addEventListener('click', () => {
-        currentVideoContent.classList.toggle('collapsed');
-        toggleCurrentVideo.classList.toggle('collapsed');
-        localStorage.setItem('currentVideoCollapsed', currentVideoContent.classList.contains('collapsed'));
-    });
-
-    // Toggle history section
-    toggleHistory.addEventListener('click', () => {
-        historyList.classList.toggle('collapsed');
-        toggleHistory.classList.toggle('collapsed');
-        localStorage.setItem('historyCollapsed', historyList.classList.contains('collapsed'));
-    });
-
-    // Toggle playlist section
-    togglePlaylist.addEventListener('click', () => {
-        playlistList.classList.toggle('collapsed');
-        togglePlaylist.classList.toggle('collapsed');
-        localStorage.setItem('playlistCollapsed', playlistList.classList.contains('collapsed'));
-    });
-}
-
 // Toast notification system
 function showToast(title, message, type = 'success', duration = 5000) {
     const toastContainer = document.getElementById('toastContainer');
@@ -1746,34 +1699,6 @@ socket.on('auth-attempt', (data) => {
         );
     }
 });
-
-// Info panel toggle functionality (also toggles history and playlist)
-function setupSidebarToggle() {
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const infoPanel = document.querySelector('.info-panel');
-    const bottomPanels = document.querySelector('.bottom-panels');
-
-    if (!toggleSidebarBtn || !infoPanel || !bottomPanels) return;
-
-    // Load saved state from localStorage (default: hidden)
-    const savedState = localStorage.getItem('infoPanelHidden');
-    const infoPanelHidden = savedState === null ? true : savedState === 'true';
-
-    if (infoPanelHidden) {
-        infoPanel.style.display = 'none';
-        bottomPanels.style.display = 'none';
-        toggleSidebarBtn.classList.add('active');
-    }
-
-    // Toggle info panel, history, and playlist visibility
-    toggleSidebarBtn.addEventListener('click', () => {
-        const isHidden = infoPanel.style.display === 'none';
-        infoPanel.style.display = isHidden ? 'block' : 'none';
-        bottomPanels.style.display = isHidden ? 'grid' : 'none';
-        toggleSidebarBtn.classList.toggle('active');
-        localStorage.setItem('infoPanelHidden', !isHidden);
-    });
-}
 
 // YouTube controls toggle functionality
 function setupYTControlsToggle() {
@@ -1888,11 +1813,6 @@ function checkAutoplayStatus() {
     }
 }
 
-// Connected Users Modal
-const connectedUsersModal = document.getElementById('connectedUsersModal');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const connectedUsersList = document.getElementById('connectedUsersList');
-
 // Show connected users modal
 function showConnectedUsersModal() {
     if (connectedUsersModal) {
@@ -1998,7 +1918,5 @@ document.addEventListener('keydown', (e) => {
 loadYouTubeAPI();
 loadHistory();
 loadPlaylist();
-setupToggleButtons();
-setupSidebarToggle();
 setupYTControlsToggle();
 checkAutoplayStatus();
