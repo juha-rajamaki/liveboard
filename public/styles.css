@@ -1214,6 +1214,10 @@ body.theater-mode .video-container {
     width: 100%;
 }
 
+body.theater-mode .current-video {
+    display: none !important;
+}
+
 body.theater-mode .video-controls {
     display: none !important;
 }
